@@ -10,3 +10,5 @@ const boardPresenter = new BoardPresenter({ boardContainer:tripEventsElement });
 render(new NewFilterView(), filtersElement);
 
 boardPresenter.init();
+
+
