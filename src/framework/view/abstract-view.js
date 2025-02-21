@@ -1,5 +1,5 @@
 import {createElement} from '../render.js';
-import './abstract-view.css';
+import '../view/abstract-view.css';
 
 /** @const {string} Класс, реализующий эффект "покачивания головой" */
 const SHAKE_CLASS_NAME = 'shake';
