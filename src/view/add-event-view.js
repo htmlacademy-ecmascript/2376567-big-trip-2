@@ -1,11 +1,14 @@
-// import { createElement } from '../render.js';
 import dayjs from 'dayjs';
 import { POINT_TYPES } from '../const.js';
 import AbstractView from '../framework/view/abstract-view.js';
 
+const DATE_FORMAT = 'DD/MM/YY HH:mm';
+
 function createAddEventTemplate(event, destination, offer, destinationAll) {
-  const { basePrice, type, dateFrom, dateTo, offersId } = event;
+  const { basePrice, type, dateFrom, offersId } = event;
   const { name, description, pictures } = destination;
+
+  const date = dayjs(dateFrom).format(DATE_FORMAT);
 
   const createOffersTemplate = (offersArray) => offersArray.map((itemOffer) =>
     `<div class="event__offer-selector">
@@ -56,10 +59,10 @@ function createAddEventTemplate(event, destination, offer, destinationAll) {
         </div>
         <div class="event__field-group event__field-group--time">
           <label class="visually-hidden" for="event-start-time-1">From</label>
-          <input class="event__input event__input--time" id="event-start-time-1" type="text" name="event-start-time" value="${dayjs(dateFrom).format('DD/MM/YY HH:mm')}">
+          <input class="event__input event__input--time" id="event-start-time-1" type="text" name="event-start-time" value="${date}">
           &mdash;
           <label class="visually-hidden" for="event-end-time-1">To</label>
-          <input class="event__input event__input--time" id="event-end-time-1" type="text" name="event-end-time" value="${dayjs(dateTo).format('DD/MM/YY HH:mm')}">
+          <input class="event__input event__input--time" id="event-end-time-1" type="text" name="event-end-time" value="${date}">
         </div>
         <div class="event__field-group event__field-group--price">
           <label class="event__label" for="event-price-1">
@@ -106,9 +109,50 @@ export default class AddEventView extends AbstractView {
     this.#destination = destination;
     this.#offer = offer;
     this.#destinationAll = destinationAll;
+    this._formSubmitHandler = this._formSubmitHandler.bind(this);
+    this._escKeyDownHandler = this._escKeyDownHandler.bind(this);
+    this._closeButtonClickHandler = this._closeButtonClickHandler.bind(this);
   }
 
   get template() {
     return createAddEventTemplate(this.#event, this.#destination, this.#offer, this.#destinationAll);
   }
+
+  _formSubmitHandler(evt) {
+    evt.preventDefault();
+    this._callback.formSubmit();
+  }
+
+  _escKeyDownHandler(evt) {
+    if (evt.key === 'Escape' || evt.key === 'Esc') {
+      evt.preventDefault();
+      this._callback.escKeyDown();
+    }
+  }
+
+  _closeButtonClickHandler(evt) {
+    evt.preventDefault();
+    this._callback.closeButtonClick();
+  }
+
+  setFormSubmitHandler(callback) {
+    this._callback.formSubmit = callback;
+    this.element.querySelector('.event__save-btn').addEventListener('click', this._formSubmitHandler);
+  }
+
+  setEscKeyDownHandler(callback) {
+    this._callback.escKeyDown = callback;
+    document.addEventListener('keydown', this._escKeyDownHandler);
+  }
+
+  setCloseButtonClickHandler(callback) {
+    this._callback.closeButtonClick = callback;
+    this.element.querySelector('.event__reset-btn').addEventListener('click', this._closeButtonClickHandler);
+  }
+
+  removeElement() {
+    super.removeElement();
+    document.removeEventListener('keydown', this._escKeyDownHandler);
+  }
 }
+

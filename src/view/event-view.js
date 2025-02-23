@@ -62,9 +62,20 @@ export default class EventView extends AbstractView {
     this.#event = event;
     this.#destination = destination;
     this.#offer = offer;
+    this._rollupClickHandler = this._rollupClickHandler.bind(this);
   }
 
   get template() {
     return createEventTemplate(this.#event, this.#destination, this.#offer);
+  }
+
+  _rollupClickHandler(evt) {
+    evt.preventDefault();
+    this._callback.rollupClick();
+  }
+
+  setRollupClickHandler(callback) {
+    this._callback.rollupClick = callback;
+    this.element.querySelector('.event__rollup-btn').addEventListener('click', this._rollupClickHandler);
   }
 }
