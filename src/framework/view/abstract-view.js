@@ -1,5 +1,5 @@
 import {createElement} from '../render.js';
-import './abstract-view.css';
+import '../view/abstract-view.css';
 
 /** @const {string} Класс, реализующий эффект "покачивания головой" */
 const SHAKE_CLASS_NAME = 'shake';
@@ -13,6 +13,8 @@ const SHAKE_ANIMATION_TIMEOUT = 600;
 export default class AbstractView {
   /** @type {HTMLElement|null} Элемент представления */
   #element = null;
+  /** @type {Object} Объект для хранения колбэков */
+  _callback = {};
 
   constructor() {
     if (new.target === AbstractView) {

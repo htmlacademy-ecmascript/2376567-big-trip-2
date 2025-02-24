@@ -5,9 +5,9 @@ const HtmlPlugin = require('html-webpack-plugin');
 module.exports = {
   entry: './src/main.js',
   output: {
-      filename: 'bundle.[contenthash].js',
-      path: path.resolve(__dirname, 'build'),
-      clean: true,
+    filename: 'bundle.[contenthash].js',
+    path: path.resolve(__dirname, 'build'),
+    clean: true,
   },
   devtool: 'source-map',
   plugins: [
@@ -37,6 +37,10 @@ module.exports = {
           },
         },
       },
+      {
+        test: /\.css$/,
+        use: ['style-loader', 'css-loader']
+      }
     ]
   }
 };
