@@ -2,6 +2,7 @@ import SortView from '../view/sort-view.js';
 import EventView from '../view/event-view.js';
 import EventsListView from '../view/events-list-view.js';
 import AddEventView from '../view/add-event-view.js';
+import { NoPointView } from '../view/no-point-view.js';
 import { render, replace } from '../framework/render.js';
 export default class BoardPresenter {
   eventsListComponent = new EventsListView();
@@ -22,6 +23,11 @@ export default class BoardPresenter {
     render(sortView, this.boardContainer);
 
     render(this.eventsListComponent, this.boardContainer);
+
+    if (this.events.length === 0) {
+      const noPointView = new NoPointView();
+      render(noPointView, this.boardContainer);
+    }
 
     for (let i = 0; i < this.events.length; i++) {
       const event = this.events[i];

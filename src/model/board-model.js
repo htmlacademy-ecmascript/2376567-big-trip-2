@@ -2,7 +2,7 @@ import { getRandomEvent, getOffers, getDestination } from '../mock/event';
 
 export default class BoardModel {
   constructor() {
-    this.EVENT_QTY = 3;
+    this.EVENT_QTY = 0;
 
     this.allOffers = getOffers();
     this.allDestination = getDestination();
