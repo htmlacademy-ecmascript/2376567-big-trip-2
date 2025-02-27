@@ -6,8 +6,8 @@ import { NoPointView } from '../view/no-point-view.js';
 import { render, replace } from '../framework/render.js';
 import dayjs from 'dayjs';
 import isBetween from 'dayjs/plugin/isBetween';
-dayjs.extend(isBetween);
 
+dayjs.extend(isBetween);
 export default class BoardPresenter {
   eventsListComponent = new EventsListView();
   #currentEventComponent = null;
@@ -17,7 +17,7 @@ export default class BoardPresenter {
     this.boardContainer = boardContainer;
     this.boardModel = boardModel;
     this.tripModel = tripModelForObserve;
-    this.tripModel.addObserver(this);
+    this.tripModel.addObserver((event) => this.update(event));
   }
 
   init() {
@@ -36,11 +36,10 @@ export default class BoardPresenter {
     }
 
     this._renderEvents();
-    this.tripModel.notifyObservers(); // Инициализация с текущими фильтрами
   }
 
   _renderEvents() {
-    this.eventsListComponent.element.innerHTML = ''; // Очистка списка
+    this.eventsListComponent.element.innerHTML = '';
 
     const filteredEvents = this.events.filter((event) => {
       const filter = this.tripModel.filters;
@@ -97,8 +96,9 @@ export default class BoardPresenter {
     this.#currentAddEventComponent = null;
   }
 
-  update(filter) {
-    console.log('Board updated with filter:', filter);
-    this._renderEvents(); // Обновление списка событий
+  update(event) {
+    if (event === 'FILTER_CHANGED') {
+      this._renderEvents();
+    }
   }
 }

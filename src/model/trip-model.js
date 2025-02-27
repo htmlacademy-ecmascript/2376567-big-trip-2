@@ -1,10 +1,11 @@
 import { filters } from '../const.js';
-
-export default class TripMainModel {
+import Observable from '../framework/observable.js';
+export default class TripMainModel extends Observable {
   #filters = { ...filters[0] };
-  #observers = [];
 
-  constructor() {}
+  constructor() {
+    super();
+  }
 
   get filters() {
     return this.#filters;
@@ -12,18 +13,6 @@ export default class TripMainModel {
 
   setFilter(filter) {
     this.#filters = filter;
-    this.notifyObservers();
-  }
-
-  addObserver(observer) {
-    this.#observers.push(observer);
-  }
-
-  removeObserver(observer) {
-    this.#observers = this.#observers.filter((obs) => obs !== observer);
-  }
-
-  notifyObservers() {
-    this.#observers.forEach((observer) => observer.update(this.#filters));
+    this._notify('FILTER_CHANGED', filter);
   }
 }

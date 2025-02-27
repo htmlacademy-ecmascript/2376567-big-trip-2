@@ -1,5 +1,3 @@
-// trip-main-view.js
-
 import AbstractView from '../framework/view/abstract-view.js';
 import { filters } from '../const.js';
 

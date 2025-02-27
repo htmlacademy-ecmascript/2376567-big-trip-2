@@ -30,7 +30,6 @@ export default class Observable {
     this.#observers.forEach((observer) => observer(event, payload));
   }
 }
-
 /**
  * Функция, которая будет вызвана при наступлении события
  * @callback observerCallback

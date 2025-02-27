@@ -2,7 +2,7 @@ import { getRandomInt, returnRandomElem, getRandomUniqueInt } from '../utils';
 import { POINT_TYPES } from '../const.js';
 
 const BasePriceRange = { MIN: 10, MAX: 3000 };
-const DateRange = { MIN: -365, MAX: 365 }; // Даты могут быть в прошлом или будущем
+const DateRange = { MIN: -365, MAX: 365 };
 const OfferPriceRange = { MIN: 20, MAX: 200 };
 const PhotoIdRange = { MIN: 1, MAX: 100 };
 const PHOTO_URL = 'https://loremflickr.com/248/152?random=';
@@ -76,14 +76,13 @@ const getRandomEvent = (quantity) => {
   const offersId = offersIdType.slice(0, getRandomInt(1, offers.length));
   const idEvent = getRandomUniqueInt(1, quantity);
 
-  // Генерация уникальных дат
   const randomDaysOffset = getRandomInt(DateRange.MIN, DateRange.MAX);
   const now = new Date();
   const dateFrom = new Date(now);
   dateFrom.setDate(now.getDate() + randomDaysOffset);
 
   const dateTo = new Date(dateFrom);
-  dateTo.setDate(dateFrom.getDate() + getRandomInt(1, 7)); // Дата окончания должна быть позже даты начала
+  dateTo.setDate(dateFrom.getDate() + getRandomInt(1, 7));
 
   return {
     id: idEvent(),
