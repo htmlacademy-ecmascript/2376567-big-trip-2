@@ -4,14 +4,20 @@ import EventsListView from '../view/events-list-view.js';
 import AddEventView from '../view/add-event-view.js';
 import { NoPointView } from '../view/no-point-view.js';
 import { render, replace } from '../framework/render.js';
+import dayjs from 'dayjs';
+import isBetween from 'dayjs/plugin/isBetween';
+dayjs.extend(isBetween);
+
 export default class BoardPresenter {
   eventsListComponent = new EventsListView();
   #currentEventComponent = null;
   #currentAddEventComponent = null;
 
-  constructor({ boardContainer }, model) {
+  constructor({ boardContainer, boardModel, tripModelForObserve }) {
     this.boardContainer = boardContainer;
-    this.boardModel = model;
+    this.boardModel = boardModel;
+    this.tripModel = tripModelForObserve;
+    this.tripModel.addObserver(this);
   }
 
   init() {
@@ -29,8 +35,31 @@ export default class BoardPresenter {
       render(noPointView, this.boardContainer);
     }
 
-    for (let i = 0; i < this.events.length; i++) {
-      const event = this.events[i];
+    this._renderEvents();
+    this.tripModel.notifyObservers(); // Инициализация с текущими фильтрами
+  }
+
+  _renderEvents() {
+    this.eventsListComponent.element.innerHTML = ''; // Очистка списка
+
+    const filteredEvents = this.events.filter((event) => {
+      const filter = this.tripModel.filters;
+      switch (filter.value) {
+        case 'everything':
+          return true;
+        case 'future':
+          return dayjs(event.dateFrom).isAfter(dayjs());
+        case 'present':
+          return dayjs().isBetween(dayjs(event.dateFrom), dayjs(event.dateTo));
+        case 'past':
+          return dayjs(event.dateFrom).isBefore(dayjs());
+        default:
+          return true;
+      }
+    });
+
+    for (let i = 0; i < filteredEvents.length; i++) {
+      const event = filteredEvents[i];
       const destination = this.boardModel.getDestinationsById(event.destination);
       const offer = this.boardModel.getOffersByType(event.type);
       this._renderEvent(event, destination, offer);
@@ -66,5 +95,10 @@ export default class BoardPresenter {
     this.#currentAddEventComponent.removeElement();
     this.#currentEventComponent = null;
     this.#currentAddEventComponent = null;
+  }
+
+  update(filter) {
+    console.log('Board updated with filter:', filter);
+    this._renderEvents(); // Обновление списка событий
   }
 }

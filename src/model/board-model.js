@@ -3,11 +3,10 @@ import { getRandomEvent, getOffers, getDestination } from '../mock/event';
 export default class BoardModel {
   #events = [];
   #allOffers = getOffers();
-  #allDestination = getDestination();
-  EVENT_QTY = 3;
+  #allDestinations = getDestination();
+  EVENT_QTY = 20;
 
   constructor() {
-
     for (let i = 0; i < this.EVENT_QTY; i++) {
       const id = i + 1;
       this.#events.push(getRandomEvent(id));
@@ -23,12 +22,12 @@ export default class BoardModel {
   }
 
   get destinations() {
-    return this.#allDestination;
+    return this.#allDestinations;
   }
 
   getDestinationsById(id) {
-    const allDestination = this.destinations;
-    return allDestination.find((item) => item.id === id);
+    const allDestinations = this.destinations;
+    return allDestinations.find((item) => item.id === id);
   }
 
   getOffersByType(type) {
