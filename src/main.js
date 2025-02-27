@@ -1,17 +1,16 @@
-import NewFilterView from './view/filter-view.js';
 import BoardPresenter from './presenter/board-presenter.js';
-import { render } from './render.js';
 import BoardModel from './model/board-model.js';
+import HeaderPresenter from './presenter/header-presenter.js';
 
-const filtersElement = document.body.querySelector('.trip-controls__filters');
+const pageHeader = document.body.querySelector('.page-header');
 const tripEventsElement = document.body.querySelector('.trip-events');
 
 const boardModel = new BoardModel();
 
+const headerPresenter = new HeaderPresenter({ headerContainer: pageHeader });
 const boardPresenter = new BoardPresenter({ boardContainer:tripEventsElement }, boardModel);
 
-render(new NewFilterView(), filtersElement);
-
+headerPresenter.init();
 boardPresenter.init();
 
 

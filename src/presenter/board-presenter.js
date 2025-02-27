@@ -15,9 +15,9 @@ export default class BoardPresenter {
   }
 
   init() {
-    this.events = [...this.boardModel.getEvents()];
-    this.destinations = [...this.boardModel.getDestinations()];
-    this.offers = [...this.boardModel.getOffers()];
+    this.events = [...this.boardModel.events];
+    this.destinations = [...this.boardModel.destinations];
+    this.offers = [...this.boardModel.offers];
 
     const sortView = new SortView();
     render(sortView, this.boardContainer);
