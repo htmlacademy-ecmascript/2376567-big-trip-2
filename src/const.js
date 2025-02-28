@@ -23,4 +23,27 @@ const filters = [
   }
 ];
 
-export { POINT_TYPES, filters };
+const sortButtons = [
+  {
+    name: 'day',
+    status: 'checked'
+  },
+  {
+    name: 'event',
+    status: ''
+  },
+  {
+    name: 'time',
+    status: ''
+  },
+  {
+    name: 'price',
+    status: ''
+  },
+  {
+    name: 'offer',
+    status: ''
+  }
+];
+
+export { POINT_TYPES, filters, sortButtons };
