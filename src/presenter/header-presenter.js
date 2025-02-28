@@ -1,10 +1,11 @@
 import { render } from '../framework/render.js';
 import TripMainView from '../view/trip-main-veiw.js';
+import filtersPresenter from './filters-presenter.js';
 export default class HeaderPresenter {
-  constructor({ headerContainer, tripModel }) {
+  constructor({ headerContainer }) {
     this.headerContainer = headerContainer;
-    this.tripModel = tripModel;
-    // this.tripModel.addObserver((event) => this.update(event));
+    this.filters = new filtersPresenter();
+    // this.filters.addObserver((event) => this.update(event));
   }
 
   init() {
@@ -15,7 +16,7 @@ export default class HeaderPresenter {
   }
 
   _onFilterChange(filter) {
-    this.tripModel.setFilter(filter);
+    this.filters.setFilter(filter);
   }
 
   // update(event, payload) {

@@ -13,11 +13,11 @@ export default class BoardPresenter {
   #currentEventComponent = null;
   #currentAddEventComponent = null;
 
-  constructor({ boardContainer, boardModel, tripModelForObserve }) {
+  constructor({ boardContainer, boardModel, observer }) {
     this.boardContainer = boardContainer;
     this.boardModel = boardModel;
-    this.tripModel = tripModelForObserve;
-    this.tripModel.addObserver((event) => this.update(event));
+    this.observer = observer;
+    this.observer.addObserver((event) => this.update(event));
   }
 
   init() {
@@ -42,7 +42,7 @@ export default class BoardPresenter {
     this.eventsListComponent.element.innerHTML = '';
 
     const filteredEvents = this.events.filter((event) => {
-      const filter = this.tripModel.filters;
+      const filter = this.observer.filters;
       switch (filter.value) {
         case 'everything':
           return true;
