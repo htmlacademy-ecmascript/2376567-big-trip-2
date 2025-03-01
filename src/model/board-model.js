@@ -1,42 +1,41 @@
 import { getRandomEvent, getOffers, getDestination } from '../mock/event';
 
 export default class BoardModel {
+  #events = [];
+  #allOffers = getOffers();
+  #allDestinations = getDestination();
+  EVENT_QTY = 20;
+
   constructor() {
-    this.EVENT_QTY = 3;
-
-    this.allOffers = getOffers();
-    this.allDestination = getDestination();
-    this.events = [];
-
     for (let i = 0; i < this.EVENT_QTY; i++) {
       const id = i + 1;
-      this.events.push(getRandomEvent(id));
+      this.#events.push(getRandomEvent(id));
     }
   }
 
-  getEvents() {
-    return this.events;
+  get events() {
+    return this.#events;
   }
 
-  getOffers() {
-    return this.allOffers;
+  get offers() {
+    return this.#allOffers;
+  }
+
+  get destinations() {
+    return this.#allDestinations;
+  }
+
+  getDestinationsById(id) {
+    const allDestinations = this.destinations;
+    return allDestinations.find((item) => item.id === id);
   }
 
   getOffersByType(type) {
-    return this.allOffers.find((offer) => offer.type === type);
+    return this.#allOffers.find((offer) => offer.type === type);
   }
 
   getOffersById(type, itemsId) {
     const offersType = this.getOffersByType(type);
     return offersType.offers.filter((item) => itemsId.find((id) => item.id === id));
-  }
-
-  getDestinations() {
-    return this.allDestination;
-  }
-
-  getDestinationsById(id) {
-    const allDestination = this.getDestinations();
-    return allDestination.find((item) => item.id === id);
   }
 }

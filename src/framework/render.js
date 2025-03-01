@@ -44,8 +44,6 @@ function render(component, container, place = RenderPosition.BEFOREEND) {
  * @param {AbstractView} oldComponent Компонент, который нужно скрыть
  */
 function replace(newComponent, oldComponent) {
-  console.log('новый компонент переданный в replace', newComponent);
-  console.log('старый компонент переданный в replace', oldComponent);
   if (!(newComponent instanceof AbstractView && oldComponent instanceof AbstractView)) {
     throw new Error('Can replace only components');
   }
@@ -53,30 +51,13 @@ function replace(newComponent, oldComponent) {
   const newElement = newComponent.element;
   const oldElement = oldComponent.element;
 
-  console.log('New element:', newElement);
-  console.log('Old element:', oldElement);
-
   const parent = oldElement.parentElement;
 
   if (parent === null) {
     throw new Error('Parent element doesn\'t exist');
   }
 
-  console.log('Parent element:', parent);
-
-  if (newElement === parent || oldElement === parent) {
-    console.error('New element or old element is the same as parent');
-    return;
-  }
-
-  if (!newElement || !oldElement) {
-    console.error('Invalid elements:', { newElement, oldElement });
-    return;
-  }
-
   parent.replaceChild(newElement, oldElement);
-  console.log('Old element removed:', !oldElement.isConnected);
-  console.log('New element added:', newElement.isConnected);
 }
 
 /**

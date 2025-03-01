@@ -2,29 +2,63 @@ import SortView from '../view/sort-view.js';
 import EventView from '../view/event-view.js';
 import EventsListView from '../view/events-list-view.js';
 import AddEventView from '../view/add-event-view.js';
+import { NoPointView } from '../view/no-point-view.js';
 import { render, replace } from '../framework/render.js';
+import dayjs from 'dayjs';
+import isBetween from 'dayjs/plugin/isBetween';
+
+dayjs.extend(isBetween);
 export default class BoardPresenter {
   eventsListComponent = new EventsListView();
   #currentEventComponent = null;
   #currentAddEventComponent = null;
 
-  constructor({ boardContainer }, model) {
+  constructor({ boardContainer, boardModel, observer }) {
     this.boardContainer = boardContainer;
-    this.boardModel = model;
+    this.boardModel = boardModel;
+    this.observer = observer;
+    this.observer.addObserver((event) => this.update(event));
   }
 
   init() {
-    this.events = [...this.boardModel.getEvents()];
-    this.destinations = [...this.boardModel.getDestinations()];
-    this.offers = [...this.boardModel.getOffers()];
+    this.events = [...this.boardModel.events];
+    this.destinations = [...this.boardModel.destinations];
+    this.offers = [...this.boardModel.offers];
 
     const sortView = new SortView();
     render(sortView, this.boardContainer);
 
     render(this.eventsListComponent, this.boardContainer);
 
-    for (let i = 0; i < this.events.length; i++) {
-      const event = this.events[i];
+    if (this.events.length === 0) {
+      const noPointView = new NoPointView();
+      render(noPointView, this.boardContainer);
+    }
+
+    this._renderEvents();
+  }
+
+  _renderEvents() {
+    this.eventsListComponent.element.innerHTML = '';
+
+    const filteredEvents = this.events.filter((event) => {
+      const filter = this.observer.filters;
+      switch (filter.value) {
+        case 'everything':
+          return true;
+        case 'future':
+          return dayjs(event.dateFrom).isAfter(dayjs());
+        case 'present':
+          return dayjs().isBetween(dayjs(event.dateFrom), dayjs(event.dateTo));
+        case 'past':
+          return dayjs(event.dateFrom).isBefore(dayjs());
+        default:
+          return true;
+      }
+    });
+
+    for (let i = 0; i < filteredEvents.length; i++) {
+      const event = filteredEvents[i];
       const destination = this.boardModel.getDestinationsById(event.destination);
       const offer = this.boardModel.getOffersByType(event.type);
       this._renderEvent(event, destination, offer);
@@ -60,5 +94,11 @@ export default class BoardPresenter {
     this.#currentAddEventComponent.removeElement();
     this.#currentEventComponent = null;
     this.#currentAddEventComponent = null;
+  }
+
+  update(event) {
+    if (event === 'FILTER_CHANGED') {
+      this._renderEvents();
+    }
   }
 }
