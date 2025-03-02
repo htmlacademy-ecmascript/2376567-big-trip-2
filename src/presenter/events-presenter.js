@@ -1,4 +1,3 @@
-import EventsListView from '../view/events-list-view';
 import EventView from '../view/event-view';
 import dayjs from 'dayjs';
 import isBetween from 'dayjs/plugin/isBetween';
@@ -8,7 +7,7 @@ dayjs.extend(isBetween);
 
 
 export default class EventsPresenter {
-  #events = null;
+  events = null;
   #destinations = null;
   #offers = null;
   #observer = null;
@@ -18,7 +17,7 @@ export default class EventsPresenter {
   #currentAddEventComponent = null;
 
   constructor({ events, destinations, offers, observer, boardModel, eventsListComponent }) {
-    this.#events = events;
+    this.events = events;
     this.#destinations = destinations;
     this.#offers = offers;
     this.#observer = observer;
@@ -64,8 +63,8 @@ export default class EventsPresenter {
     };
 
 
-    for (let i = 0; i < filteringEvents(this.#events).length; i++) {
-      const event = filteringEvents(this.#events)[i];
+    for (let i = 0; i < filteringEvents(this.events).length; i++) {
+      const event = filteringEvents(this.events)[i];
       const destination = this.#boardModel.getDestinationsById(event.destination);
       const offer = this.#boardModel.getOffersByType(event.type);
       this._renderEvent(event, destination, offer);

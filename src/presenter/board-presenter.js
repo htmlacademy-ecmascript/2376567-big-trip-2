@@ -11,6 +11,7 @@ export default class BoardPresenter {
   #eventsListComponent = new EventsListView();
   #boardContainer = null;
   #boardModel = null;
+  #eventsPresenters = new Map();
 
   constructor({ boardContainer, boardModel, observer }) {
     this.#boardContainer = boardContainer;
@@ -37,7 +38,7 @@ export default class BoardPresenter {
 
   _renderEvents() {
 
-    const presenterParams = {
+    const eventsPresenterParams = {
       events: this.events,
       destinations: this.destinations,
       offers: this.offers,
@@ -46,8 +47,12 @@ export default class BoardPresenter {
       eventsListComponent: this.#eventsListComponent
     };
 
-    const eventsPresenter = new EventsPresenter(presenterParams);
+    const eventsPresenter = new EventsPresenter(eventsPresenterParams);
     eventsPresenter.init();
+    eventsPresenter.events.forEach((eventPresenter) => {
+      this.#eventsPresenters.set(eventPresenter.id, eventPresenter);
+    });
+    console.log(this.#eventsPresenters);
   }
 
   _renderBoard() {
