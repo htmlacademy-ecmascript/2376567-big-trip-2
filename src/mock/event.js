@@ -1,5 +1,6 @@
 import { getRandomInt, returnRandomElem, getRandomUniqueInt } from '../utils';
 import { POINT_TYPES } from '../const.js';
+import { nanoid } from 'nanoid';
 
 const BasePriceRange = { MIN: 10, MAX: 3000 };
 const DateRange = { MIN: -365, MAX: 365 };
@@ -74,7 +75,7 @@ const getRandomEvent = (quantity) => {
   const { type, offers } = offersElement;
   const offersIdType = offers.map((item) => item.id);
   const offersId = offersIdType.slice(0, getRandomInt(1, offers.length));
-  const idEvent = getRandomUniqueInt(1, quantity);
+  // const idEvent = getRandomUniqueInt(1, quantity);
 
   const randomDaysOffset = getRandomInt(DateRange.MIN, DateRange.MAX);
   const now = new Date();
@@ -85,7 +86,7 @@ const getRandomEvent = (quantity) => {
   dateTo.setDate(dateFrom.getDate() + getRandomInt(1, 7));
 
   return {
-    id: idEvent(),
+    id: nanoid(),
     basePrice: getRandomInt(BasePriceRange.MIN, BasePriceRange.MAX),
     dateFrom: dateFrom.toISOString(),
     dateTo: dateTo.toISOString(),
