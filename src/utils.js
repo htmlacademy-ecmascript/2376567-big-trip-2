@@ -31,4 +31,8 @@ const getDuration = (start, end) => {
   }
 };
 
-export {getRandomInt, returnRandomElem, getRandomUniqueInt, humanizeTaskDueDate, getDuration};
+function updateItem(items, update) {
+  return items.map((item) => item.id === update.id ? update : item);
+}
+
+export {getRandomInt, returnRandomElem, getRandomUniqueInt, humanizeTaskDueDate, getDuration, updateItem};

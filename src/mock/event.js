@@ -1,4 +1,4 @@
-import { getRandomInt, returnRandomElem, getRandomUniqueInt } from '../utils';
+import { getRandomInt, returnRandomElem } from '../utils';
 import { POINT_TYPES } from '../const.js';
 import { nanoid } from 'nanoid';
 
@@ -67,7 +67,7 @@ const getDestination = () => {
   return destinationMocks;
 };
 
-const getRandomEvent = (quantity) => {
+const getRandomEvent = () => {
   const mockOffersArray = getOffers();
   const mockDestinationArray = getDestination();
   const offersElement = returnRandomElem(mockOffersArray);

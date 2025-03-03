@@ -1,17 +1,14 @@
 import EventsListView from '../view/events-list-view.js';
 import { NoPointView } from '../view/no-point-view.js';
 import { render } from '../framework/render.js';
-import dayjs from 'dayjs';
-import isBetween from 'dayjs/plugin/isBetween';
 import SortPresenter from './sort-presenter.js';
 import EventsPresenter from './events-presenter.js';
-
-dayjs.extend(isBetween);
+import { updateItem } from '../utils.js';
 export default class BoardPresenter {
   #eventsListComponent = new EventsListView();
   #boardContainer = null;
   #boardModel = null;
-  #eventsPresenters = new Map();
+  #eventsPresenter = null;
 
   constructor({ boardContainer, boardModel, observer }) {
     this.#boardContainer = boardContainer;
@@ -37,23 +34,24 @@ export default class BoardPresenter {
   }
 
   _renderEvents() {
-
     const eventsPresenterParams = {
       events: this.events,
       destinations: this.destinations,
       offers: this.offers,
       observer: this.observer,
       boardModel: this.#boardModel,
-      eventsListComponent: this.#eventsListComponent
+      eventsListComponent: this.#eventsListComponent,
+      onDataChange: this._handleEventChange,
     };
 
-    const eventsPresenter = new EventsPresenter(eventsPresenterParams);
-    eventsPresenter.init();
-    eventsPresenter.events.forEach((eventPresenter) => {
-      this.#eventsPresenters.set(eventPresenter.id, eventPresenter);
-    });
-    console.log(this.#eventsPresenters);
+    this.#eventsPresenter = new EventsPresenter(eventsPresenterParams);
+    this.#eventsPresenter.init();
   }
+
+  _handleEventChange = (updatedEvent) => {
+    this.events = updateItem(this.events, updatedEvent);
+    this.#eventsPresenter.updateEvent(updatedEvent);
+  };
 
   _renderBoard() {
     this._renderSort();
