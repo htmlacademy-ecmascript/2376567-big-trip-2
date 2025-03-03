@@ -10,13 +10,15 @@ export default class EventPresenter {
   #addEventView = null;
   #onDataChange = null;
   #destinationAll = null;
+  #onFormOpen = null;
 
-  constructor({ event, destination, offer, onDataChange, destinationAll }) {
+  constructor({ event, destination, offer, onDataChange, destinationAll, onFormOpen }) {
     this.#event = event;
     this.#destination = destination;
     this.#offer = offer;
     this.#onDataChange = onDataChange;
     this.#destinationAll = destinationAll;
+    this.#onFormOpen = onFormOpen;
   }
 
   init(container) {
@@ -41,7 +43,15 @@ export default class EventPresenter {
     prevEventView.removeElement();
   }
 
+  resetView() {
+    if (this.#addEventView) {
+      this._replaceFormWithEvent();
+    }
+  }
+
   _replaceEventWithForm() {
+    this.#onFormOpen();
+
     this.#addEventView = new AddEventView(this.#event, this.#destination, this.#offer, this.#destinationAll);
     this.#addEventView.setFormSubmitHandler(() => this._replaceFormWithEvent());
     this.#addEventView.setEscKeyDownHandler(() => this._replaceFormWithEvent());

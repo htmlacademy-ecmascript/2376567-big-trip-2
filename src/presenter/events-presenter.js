@@ -2,6 +2,7 @@ import dayjs from 'dayjs';
 import isBetween from 'dayjs/plugin/isBetween';
 import EventPresenter from './event-presenter';
 dayjs.extend(isBetween);
+
 export default class EventsPresenter {
   #events = null;
   #destinations = null;
@@ -36,6 +37,7 @@ export default class EventsPresenter {
       offer,
       onDataChange: this.#onDataChange,
       destinationAll: this.#destinations,
+      onFormOpen: this.resetAllViews.bind(this),
     });
 
     eventPresenter.init(this.#eventsListComponent.element);
@@ -71,5 +73,9 @@ export default class EventsPresenter {
       const offer = this.#boardModel.getOffersByType(updatedEvent.type);
       eventPresenter.update(updatedEvent, destination, offer);
     }
+  }
+
+  resetAllViews() {
+    this.#eventPresenters.forEach((presenter) => presenter.resetView());
   }
 }
