@@ -4,7 +4,7 @@ export default class BoardModel {
   #events = [];
   #allOffers = getOffers();
   #allDestinations = getDestination();
-  EVENT_QTY = 20;
+  EVENT_QTY = 10;
 
   constructor() {
     for (let i = 0; i < this.EVENT_QTY; i++) {

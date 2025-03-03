@@ -1,99 +1,69 @@
-import SortView from '../view/sort-view.js';
-import EventView from '../view/event-view.js';
 import EventsListView from '../view/events-list-view.js';
-import AddEventView from '../view/add-event-view.js';
 import { NoPointView } from '../view/no-point-view.js';
-import { render, replace } from '../framework/render.js';
-import dayjs from 'dayjs';
-import isBetween from 'dayjs/plugin/isBetween';
-
-dayjs.extend(isBetween);
+import { render } from '../framework/render.js';
+import SortPresenter from './sort-presenter.js';
+import EventsPresenter from './events-presenter.js';
+import { updateItem } from '../utils.js';
 export default class BoardPresenter {
-  eventsListComponent = new EventsListView();
-  #currentEventComponent = null;
-  #currentAddEventComponent = null;
+  #eventsListComponent = new EventsListView();
+  #boardContainer = null;
+  #boardModel = null;
+  #eventsPresenter = null;
 
   constructor({ boardContainer, boardModel, observer }) {
-    this.boardContainer = boardContainer;
-    this.boardModel = boardModel;
+    this.#boardContainer = boardContainer;
+    this.#boardModel = boardModel;
     this.observer = observer;
     this.observer.addObserver((event) => this.update(event));
   }
 
   init() {
-    this.events = [...this.boardModel.events];
-    this.destinations = [...this.boardModel.destinations];
-    this.offers = [...this.boardModel.offers];
+    this.events = [...this.#boardModel.events];
+    this.destinations = [...this.#boardModel.destinations];
+    this.offers = [...this.#boardModel.offers];
 
-    const sortView = new SortView();
-    render(sortView, this.boardContainer);
+    this._renderBoard();
+  }
 
-    render(this.eventsListComponent, this.boardContainer);
+  _renderSort() {
+    const sortPresenter = new SortPresenter({
+      boardContainer: this.#boardContainer,
+    });
 
-    if (this.events.length === 0) {
-      const noPointView = new NoPointView();
-      render(noPointView, this.boardContainer);
-    }
-
-    this._renderEvents();
+    sortPresenter.init();
   }
 
   _renderEvents() {
-    this.eventsListComponent.element.innerHTML = '';
+    const eventsPresenterParams = {
+      events: this.events,
+      destinations: this.destinations,
+      offers: this.offers,
+      observer: this.observer,
+      boardModel: this.#boardModel,
+      eventsListComponent: this.#eventsListComponent,
+      onDataChange: this._handleEventChange,
+    };
 
-    const filteredEvents = this.events.filter((event) => {
-      const filter = this.observer.filters;
-      switch (filter.value) {
-        case 'everything':
-          return true;
-        case 'future':
-          return dayjs(event.dateFrom).isAfter(dayjs());
-        case 'present':
-          return dayjs().isBetween(dayjs(event.dateFrom), dayjs(event.dateTo));
-        case 'past':
-          return dayjs(event.dateFrom).isBefore(dayjs());
-        default:
-          return true;
-      }
-    });
+    this.#eventsPresenter = new EventsPresenter(eventsPresenterParams);
+    this.#eventsPresenter.init();
+  }
 
-    for (let i = 0; i < filteredEvents.length; i++) {
-      const event = filteredEvents[i];
-      const destination = this.boardModel.getDestinationsById(event.destination);
-      const offer = this.boardModel.getOffersByType(event.type);
-      this._renderEvent(event, destination, offer);
+  _handleEventChange = (updatedEvent) => {
+    this.events = updateItem(this.events, updatedEvent);
+    this.#eventsPresenter.updateEvent(updatedEvent);
+  };
+
+  _renderBoard() {
+    this._renderSort();
+
+    if (this.events.length === 0) {
+      const noPointView = new NoPointView();
+      render(noPointView, this.#boardContainer);
     }
-  }
 
-  _renderEvent(event, destination, offer) {
-    const eventView = new EventView(event, destination, offer);
-    const liElement = document.createElement('li');
-    liElement.classList.add('trip-events__item');
-    liElement.appendChild(eventView.element);
+    render(this.#eventsListComponent, this.#boardContainer);
 
-    this.eventsListComponent.element.appendChild(liElement);
-
-    eventView.setRollupClickHandler(() => this._replaceEventWithForm(event, destination, offer, eventView));
-  }
-
-  _replaceEventWithForm(event, destination, offer, eventView) {
-    const addEventView = new AddEventView(event, destination, offer, this.destinations);
-
-    this.#currentEventComponent = eventView;
-    this.#currentAddEventComponent = addEventView;
-
-    addEventView.setFormSubmitHandler(() => this._replaceFormWithEvent());
-    addEventView.setEscKeyDownHandler(() => this._replaceFormWithEvent());
-    addEventView.setCloseButtonClickHandler(() => this._replaceFormWithEvent());
-
-    replace(addEventView, eventView);
-  }
-
-  _replaceFormWithEvent() {
-    replace(this.#currentEventComponent, this.#currentAddEventComponent);
-    this.#currentAddEventComponent.removeElement();
-    this.#currentEventComponent = null;
-    this.#currentAddEventComponent = null;
+    this._renderEvents();
   }
 
   update(event) {
