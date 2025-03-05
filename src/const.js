@@ -50,4 +50,10 @@ const sortButtons = [
   }
 ];
 
-export { POINT_TYPES, filters, sortButtons };
+const SortType = {
+  DAY: 'day',
+  TIME: 'time',
+  PRICE: 'price',
+};
+
+export { POINT_TYPES, filters, sortButtons, SortType };

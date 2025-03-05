@@ -1,6 +1,6 @@
 import { filters } from '../const.js';
 import Observable from '../framework/observable.js';
-export default class filtersPresenter extends Observable {
+export default class TripMainModel extends Observable {
   #filters = { ...filters[0] };
 
   constructor() {

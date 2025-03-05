@@ -4,7 +4,7 @@ import EventPresenter from './event-presenter';
 dayjs.extend(isBetween);
 
 export default class EventsPresenter {
-  #events = null;
+  events = null;
   #destinations = null;
   #offers = null;
   #observer = null;
@@ -14,7 +14,7 @@ export default class EventsPresenter {
   #eventPresenters = new Map();
 
   constructor({ events, destinations, offers, observer, boardModel, eventsListComponent, onDataChange }) {
-    this.#events = events;
+    this.events = events;
     this.#destinations = destinations;
     this.#offers = offers;
     this.#observer = observer;
@@ -47,7 +47,7 @@ export default class EventsPresenter {
   _renderEvents() {
     this.#eventsListComponent.element.innerHTML = '';
 
-    const filteredEvents = this.#events.filter((event) => {
+    const filteredEvents = this.events.filter((event) => {
       const filter = this.#observer.filters;
       switch (filter.value) {
         case 'everything':
@@ -73,6 +73,11 @@ export default class EventsPresenter {
       const offer = this.#boardModel.getOffersByType(updatedEvent.type);
       eventPresenter.update(updatedEvent, destination, offer);
     }
+  }
+
+  updateEvents(sortedEvents) {
+    this.events = sortedEvents;
+    this._renderEvents();
   }
 
   resetAllViews() {

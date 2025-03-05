@@ -25,15 +25,25 @@ export default class BoardPresenter {
     this._renderBoard();
   }
 
-  _renderSort() {
+  _renderSort(eventsPresenter) {
     const sortPresenter = new SortPresenter({
       boardContainer: this.#boardContainer,
+      eventsPresenter: eventsPresenter,
     });
 
     sortPresenter.init();
   }
 
-  _renderEvents() {
+  _renderEvents(eventsListComponent = this.#eventsListComponent) {
+    this.#eventsPresenter.init(eventsListComponent);
+  }
+
+  _handleEventChange = (updatedEvent) => {
+    this.events = updateItem(this.events, updatedEvent);
+    this.#eventsPresenter.updateEvent(updatedEvent);
+  };
+
+  _renderBoard() {
     const eventsPresenterParams = {
       events: this.events,
       destinations: this.destinations,
@@ -43,18 +53,8 @@ export default class BoardPresenter {
       eventsListComponent: this.#eventsListComponent,
       onDataChange: this._handleEventChange,
     };
-
     this.#eventsPresenter = new EventsPresenter(eventsPresenterParams);
-    this.#eventsPresenter.init();
-  }
-
-  _handleEventChange = (updatedEvent) => {
-    this.events = updateItem(this.events, updatedEvent);
-    this.#eventsPresenter.updateEvent(updatedEvent);
-  };
-
-  _renderBoard() {
-    this._renderSort();
+    this._renderSort(this.#eventsPresenter);
 
     if (this.events.length === 0) {
       const noPointView = new NoPointView();
@@ -68,7 +68,7 @@ export default class BoardPresenter {
 
   update(event) {
     if (event === 'FILTER_CHANGED') {
-      this._renderEvents();
+      this._renderEvents(this.#eventsListComponent);
     }
   }
 }
