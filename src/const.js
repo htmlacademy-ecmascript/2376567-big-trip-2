@@ -4,22 +4,26 @@ const filters = [
   {
     id: 'filter-everything',
     name: 'EVERYTHING',
-    value: 'everything'
+    value: 'everything',
+    status: 'checked'
   },
   {
     id: 'filter-future',
     name: 'FUTURE',
-    value: 'future'
+    value: 'future',
+    status: ''
   },
   {
     id: 'filter-present',
     name: 'PRESENT',
-    value: 'present'
+    value: 'present',
+    status: ''
   },
   {
     id: 'filter-past',
     name: 'PAST',
-    value: 'past'
+    value: 'past',
+    status: ''
   }
 ];
 

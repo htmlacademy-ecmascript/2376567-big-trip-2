@@ -1,6 +1,7 @@
 import { render } from '../framework/render.js';
 import TripMainView from '../view/trip-main-veiw.js';
 import filtersPresenter from './filters-presenter.js';
+import FilterView from '../view/filtres-view.js';
 export default class HeaderPresenter {
   constructor({ headerContainer }) {
     this.headerContainer = headerContainer;
@@ -12,7 +13,9 @@ export default class HeaderPresenter {
     const tripMainView = new TripMainView();
     this.headerContainer.innerHTML = null;
     render(tripMainView, this.headerContainer);
-    tripMainView.setFiltersClickHandler(this._onFilterChange.bind(this));
+    const filtersView = new FilterView();
+    render(filtersView, document.body.querySelector('.trip-controls__filters'));
+    filtersView.setFiltersClickHandler(this._onFilterChange.bind(this));
   }
 
   _onFilterChange(filter) {
