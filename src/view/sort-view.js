@@ -4,8 +4,8 @@ import { sortButtons } from '../const.js';
 function createSortTemplate() {
   const createSortButtonTemplate = (buttons) => buttons.map(({ name, status }) =>
     `<div class="trip-sort__item trip-sort__item--${name}">
-        <input id="sort-${name}" class="trip-sort__input visually-hidden" type="radio" name="trip-sort" value="sort-${name}" ${status}>
-        <label class="trip-sort__btn" for="sort-${name}" data-sort-type="${name}">${name}</label>
+        <input id="sort-${name}" class="trip-sort__input visually-hidden" type="radio" name="trip-sort" data-sort-type="${name}" value="sort-${name}" ${status}>
+        <label class="trip-sort__btn" for="sort-${name}">${name}</label>
       </div>`
   ).join('');
 
@@ -28,15 +28,12 @@ export default class SortView extends AbstractView {
   }
 
   _sortInputClickHandler(evt) {
-    evt.preventDefault();
-    if (evt.target.closest('.trip-sort__btn')) {
-      this._callback.sortInputClick(evt);
-    }
+    this._callback.sortInputClick(evt);
   }
 
   setSortInputClickHandler(callback) {
     this._callback.sortInputClick = callback;
-    document.querySelector('.trip-sort').addEventListener('click', this._sortInputClickHandler);
+    document.querySelector('.trip-sort').addEventListener('change', this._sortInputClickHandler);
   }
 
 }

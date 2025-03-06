@@ -34,7 +34,7 @@ const sortButtons = [
   },
   {
     name: 'event',
-    status: ''
+    status: 'disabled'
   },
   {
     name: 'time',
@@ -46,7 +46,7 @@ const sortButtons = [
   },
   {
     name: 'offer',
-    status: ''
+    status: 'disabled'
   }
 ];
 
