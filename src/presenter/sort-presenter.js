@@ -17,10 +17,10 @@ export default class SortPresenter {
     const sortView = new SortView();
     render(sortView, this.#container);
 
-    sortView.setSortInputClickHandler(this.#handleSortTypeChange);
+    sortView.setSortInputClickHandler(this._handleSortTypeChange);
   }
 
-  #handleSortTypeChange = (evt) => {
+  _handleSortTypeChange = (evt) => {
     const sortType = evt.target.dataset.sortType;
 
     if (this.#currentSortType === sortType) {
@@ -29,11 +29,11 @@ export default class SortPresenter {
 
     this.#currentSortType = sortType;
 
-    const sortedEvents = this.#getSortedEvents(this.#eventsPresenter.events, sortType);
+    const sortedEvents = this._getSortedEvents(this.#eventsPresenter.events, sortType);
     this.#eventsPresenter.updateEvents(sortedEvents);
   };
 
-  #getSortedEvents(events, sortType) {
+  _getSortedEvents(events, sortType) {
     switch (sortType) {
       case SortType.TIME:
         return [...events].sort((a, b) => dayjs(b.dateTo).diff(b.dateFrom) - dayjs(a.dateTo).diff(a.dateFrom));

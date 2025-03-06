@@ -9,12 +9,14 @@ export default class BoardPresenter {
   #boardContainer = null;
   #boardModel = null;
   #eventsPresenter = null;
+  #filtersPresenter = null;
 
-  constructor({ boardContainer, boardModel, observer }) {
+  constructor({ boardContainer, boardModel, filtersPresenter }) {
     this.#boardContainer = boardContainer;
     this.#boardModel = boardModel;
-    this.observer = observer;
-    this.observer.addObserver((event) => this.update(event));
+    this.#filtersPresenter = filtersPresenter;
+
+    this.#filtersPresenter.addObserver((event) => this._handleFilterUpdate(event));
   }
 
   init() {
@@ -48,7 +50,6 @@ export default class BoardPresenter {
       events: this.events,
       destinations: this.destinations,
       offers: this.offers,
-      observer: this.observer,
       boardModel: this.#boardModel,
       eventsListComponent: this.#eventsListComponent,
       onDataChange: this._handleEventChange,
@@ -62,13 +63,17 @@ export default class BoardPresenter {
     }
 
     render(this.#eventsListComponent, this.#boardContainer);
-
     this._renderEvents();
   }
 
-  update(event) {
+  _handleFilterUpdate(event) {
     if (event === 'FILTER_CHANGED') {
-      this._renderEvents(this.#eventsListComponent);
+      const filteredEvents = this.#filtersPresenter.filterEvents(this.events, this.#filtersPresenter.filters);
+      this.#eventsPresenter.updateEvents(filteredEvents);
     }
+  }
+
+  updateEvents(filteredEvents) {
+    this.#eventsPresenter.updateEvents(filteredEvents);
   }
 }
