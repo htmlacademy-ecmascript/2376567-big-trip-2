@@ -20,20 +20,20 @@ export default class SortView extends AbstractView {
 
   constructor() {
     super();
-    this._sortInputClickHandler = this._sortInputClickHandler.bind(this);
+    this._sortInputСhangeHandler = this._sortInputСhangeHandler.bind(this);
   }
 
   get template() {
     return createSortTemplate();
   }
 
-  _sortInputClickHandler(evt) {
-    this._callback.sortInputClick(evt);
+  _sortInputСhangeHandler(evt) {
+    this._callback.sortInputСhange(evt);
   }
 
-  setSortInputClickHandler(callback) {
-    this._callback.sortInputClick = callback;
-    document.querySelector('.trip-sort').addEventListener('change', this._sortInputClickHandler);
+  setSortInputСhangeHandler(callback) {
+    this._callback.sortInputСhange = callback;
+    document.querySelector('.trip-sort').addEventListener('change', this._sortInputСhangeHandler);
   }
 
 }
