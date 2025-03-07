@@ -1,4 +1,4 @@
-import { filters } from '../const.js';
+import { FILTERS } from '../const.js';
 import Observable from '../framework/observable.js';
 import FilterView from '../view/filtres-view.js';
 import { render } from '../framework/render.js';
@@ -8,7 +8,7 @@ import isBetween from 'dayjs/plugin/isBetween';
 dayjs.extend(isBetween);
 
 export default class FiltersPresenter extends Observable {
-  #filters = { ...filters[0] };
+  #filters = { ...FILTERS[0] };
   #container = null;
 
   constructor() {

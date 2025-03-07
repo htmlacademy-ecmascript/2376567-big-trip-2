@@ -1,5 +1,5 @@
 import AbstractView from '../framework/view/abstract-view.js';
-import { sortButtons } from '../const.js';
+import { SORT_BUTTONS } from '../const.js';
 
 function createSortTemplate() {
   const createSortButtonTemplate = (buttons) => buttons.map(({ name, status }) =>
@@ -11,7 +11,7 @@ function createSortTemplate() {
 
   return (
     `<form class="trip-events__trip-sort trip-sort" action="#" method="get">
-      ${createSortButtonTemplate(sortButtons)}
+      ${createSortButtonTemplate(SORT_BUTTONS)}
     </form>`
   );
 }

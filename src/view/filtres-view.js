@@ -1,5 +1,5 @@
 import AbstractView from '../framework/view/abstract-view';
-import { filters } from '../const';
+import { FILTERS } from '../const';
 
 function createFilterTemplate() {
   const addFilters = (arrayfilters) => arrayfilters.map(({ id, value, name, status }) =>
@@ -10,7 +10,7 @@ function createFilterTemplate() {
 
   return (
     `<form class="trip-filters" action="#" method="get">
-    ${ addFilters(filters) }
+    ${ addFilters(FILTERS) }
       <button class="visually-hidden" type="submit">Accept filter</button>
       </form>`
   );
@@ -23,7 +23,7 @@ export default class FilterView extends AbstractView {
   }
 
   get template() {
-    return createFilterTemplate(filters);
+    return createFilterTemplate(FILTERS);
   }
 
   setFiltersClickHandler(handler) {
@@ -31,7 +31,7 @@ export default class FilterView extends AbstractView {
     this.element.querySelectorAll('.trip-filters__filter-label').forEach((label) => {
       label.addEventListener('click', () => {
         const input = label.parentElement.querySelector('.trip-filters__filter-input');
-        const filter = filters.find((item) => item.value === input.value);
+        const filter = FILTERS.find((item) => item.value === input.value);
         this._callback.filtersClick(filter);
       });
     });

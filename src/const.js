@@ -1,6 +1,6 @@
 const POINT_TYPES = ['taxi', 'bus', 'train', 'ship', 'drive', 'flight', 'check-in', 'sightseeing', 'restaurant'];
 
-const filters = [
+const FILTERS = [
   {
     id: 'filter-everything',
     name: 'EVERYTHING',
@@ -27,7 +27,7 @@ const filters = [
   }
 ];
 
-const sortButtons = [
+const SORT_BUTTONS = [
   {
     name: 'day',
     status: 'checked'
@@ -50,10 +50,10 @@ const sortButtons = [
   }
 ];
 
-const SortType = {
+const SORT_TYPES = {
   DAY: 'day',
   TIME: 'time',
   PRICE: 'price',
 };
 
-export { POINT_TYPES, filters, sortButtons, SortType };
+export { POINT_TYPES, FILTERS, SORT_BUTTONS, SORT_TYPES };
