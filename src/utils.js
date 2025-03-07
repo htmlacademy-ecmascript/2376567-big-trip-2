@@ -2,7 +2,7 @@ import dayjs from 'dayjs';
 import durationPlugin from 'dayjs/plugin/duration';
 dayjs.extend(durationPlugin);
 
-const DATE_FORMAT = 'D MMMM';
+const DATE_FORMAT = 'D MMM';
 
 const humanizeTaskDueDate = (dueDate) => dueDate ? dayjs(dueDate).format(DATE_FORMAT) : '';
 

@@ -9,12 +9,14 @@ export default class BoardPresenter {
   #boardContainer = null;
   #boardModel = null;
   #eventsPresenter = null;
+  #filtersPresenter = null;
 
-  constructor({ boardContainer, boardModel, observer }) {
+  constructor({ boardContainer, boardModel, filtersPresenter }) {
     this.#boardContainer = boardContainer;
     this.#boardModel = boardModel;
-    this.observer = observer;
-    this.observer.addObserver((event) => this.update(event));
+    this.#filtersPresenter = filtersPresenter;
+
+    this.#filtersPresenter.addObserver((event) => this._handleFilterUpdate(event));
   }
 
   init() {
@@ -25,27 +27,17 @@ export default class BoardPresenter {
     this._renderBoard();
   }
 
-  _renderSort() {
+  _renderSort(eventsPresenter) {
     const sortPresenter = new SortPresenter({
       boardContainer: this.#boardContainer,
+      eventsPresenter: eventsPresenter,
     });
 
     sortPresenter.init();
   }
 
-  _renderEvents() {
-    const eventsPresenterParams = {
-      events: this.events,
-      destinations: this.destinations,
-      offers: this.offers,
-      observer: this.observer,
-      boardModel: this.#boardModel,
-      eventsListComponent: this.#eventsListComponent,
-      onDataChange: this._handleEventChange,
-    };
-
-    this.#eventsPresenter = new EventsPresenter(eventsPresenterParams);
-    this.#eventsPresenter.init();
+  _renderEvents(eventsListComponent = this.#eventsListComponent) {
+    this.#eventsPresenter.init(eventsListComponent);
   }
 
   _handleEventChange = (updatedEvent) => {
@@ -54,7 +46,16 @@ export default class BoardPresenter {
   };
 
   _renderBoard() {
-    this._renderSort();
+    const eventsPresenterParams = {
+      events: this.events,
+      destinations: this.destinations,
+      offers: this.offers,
+      boardModel: this.#boardModel,
+      eventsListComponent: this.#eventsListComponent,
+      onDataChange: this._handleEventChange,
+    };
+    this.#eventsPresenter = new EventsPresenter(eventsPresenterParams);
+    this._renderSort(this.#eventsPresenter);
 
     if (this.events.length === 0) {
       const noPointView = new NoPointView();
@@ -62,13 +63,17 @@ export default class BoardPresenter {
     }
 
     render(this.#eventsListComponent, this.#boardContainer);
-
     this._renderEvents();
   }
 
-  update(event) {
+  _handleFilterUpdate(event) {
     if (event === 'FILTER_CHANGED') {
-      this._renderEvents();
+      const filteredEvents = this.#filtersPresenter.filterEvents(this.events, this.#filtersPresenter.filters);
+      this.#eventsPresenter.updateEvents(filteredEvents);
     }
+  }
+
+  updateEvents(filteredEvents) {
+    this.#eventsPresenter.updateEvents(filteredEvents);
   }
 }

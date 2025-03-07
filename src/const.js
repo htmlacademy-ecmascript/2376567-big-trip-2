@@ -1,36 +1,40 @@
 const POINT_TYPES = ['taxi', 'bus', 'train', 'ship', 'drive', 'flight', 'check-in', 'sightseeing', 'restaurant'];
 
-const filters = [
+const FILTERS = [
   {
     id: 'filter-everything',
     name: 'EVERYTHING',
-    value: 'everything'
+    value: 'everything',
+    status: 'checked'
   },
   {
     id: 'filter-future',
     name: 'FUTURE',
-    value: 'future'
+    value: 'future',
+    status: ''
   },
   {
     id: 'filter-present',
     name: 'PRESENT',
-    value: 'present'
+    value: 'present',
+    status: ''
   },
   {
     id: 'filter-past',
     name: 'PAST',
-    value: 'past'
+    value: 'past',
+    status: ''
   }
 ];
 
-const sortButtons = [
+const SORT_BUTTONS = [
   {
     name: 'day',
     status: 'checked'
   },
   {
     name: 'event',
-    status: ''
+    status: 'disabled'
   },
   {
     name: 'time',
@@ -42,8 +46,14 @@ const sortButtons = [
   },
   {
     name: 'offer',
-    status: ''
+    status: 'disabled'
   }
 ];
 
-export { POINT_TYPES, filters, sortButtons };
+const SORT_TYPES = {
+  DAY: 'day',
+  TIME: 'time',
+  PRICE: 'price',
+};
+
+export { POINT_TYPES, FILTERS, SORT_BUTTONS, SORT_TYPES };
