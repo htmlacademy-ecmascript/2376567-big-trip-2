@@ -32,6 +32,7 @@ export default class EventsPresenter {
       offer,
       onDataChange: this.#onDataChange,
       destinationAll: this.#destinations,
+      offerAll: this.#offers,
       onFormOpen: this.resetAllViews.bind(this),
     });
 
