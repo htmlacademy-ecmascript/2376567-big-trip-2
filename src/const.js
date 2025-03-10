@@ -1,5 +1,7 @@
 const POINT_TYPES = ['taxi', 'bus', 'train', 'ship', 'drive', 'flight', 'check-in', 'sightseeing', 'restaurant'];
 
+const DESTINATIONS = ['Amsterdam', 'Chamonix', 'Geneva', 'Paris', 'Berlin', 'Prague', 'Tokyo', 'Moscow', 'Saint-Petersburg'];
+
 const FILTERS = [
   {
     id: 'filter-everything',
@@ -56,4 +58,4 @@ const SORT_TYPES = {
   PRICE: 'price',
 };
 
-export { POINT_TYPES, FILTERS, SORT_BUTTONS, SORT_TYPES };
+export { POINT_TYPES, FILTERS, SORT_BUTTONS, SORT_TYPES, DESTINATIONS };
