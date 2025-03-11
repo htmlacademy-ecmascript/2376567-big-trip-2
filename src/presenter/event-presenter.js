@@ -1,5 +1,5 @@
 import EventView from '../view/event-view.js';
-import AddEventView from '../view/add-event-view.js';
+import EditEventView from '../view/edit-event-view.js';
 import { replace } from '../framework/render.js';
 
 export default class EventPresenter {
@@ -7,7 +7,7 @@ export default class EventPresenter {
   #destination = null;
   #offer = null;
   #eventView = null;
-  #addEventView = null;
+  #editEventView = null;
   #onDataChange = null;
   #destinationAll = null;
   #offerAll = null;
@@ -46,7 +46,7 @@ export default class EventPresenter {
   }
 
   resetView() {
-    if (this.#addEventView) {
+    if (this.#editEventView) {
       this._replaceFormWithEvent();
     }
   }
@@ -54,21 +54,21 @@ export default class EventPresenter {
   _replaceEventWithForm() {
     this.#onFormOpen();
 
-    this.#addEventView = new AddEventView(this.#event, this.#destination, this.#offer, this.#destinationAll, this.#offerAll);
-    this.#addEventView.setFormSubmitHandler(() => this._replaceFormWithEvent());
-    this.#addEventView.setEscKeyDownHandler(() => this._replaceFormWithEvent());
-    this.#addEventView.setCloseButtonClickHandler(() => this._replaceFormWithEvent());
-    this.#addEventView.setRollupButtonClickHandler(() => this._replaceFormWithEvent());
+    this.#editEventView = new EditEventView(this.#event, this.#destination, this.#offer, this.#destinationAll, this.#offerAll);
+    this.#editEventView.setFormSubmitHandler(() => this._replaceFormWithEvent());
+    this.#editEventView.setEscKeyDownHandler(() => this._replaceFormWithEvent());
+    this.#editEventView.setCloseButtonClickHandler(() => this._replaceFormWithEvent());
+    this.#editEventView.setRollupButtonClickHandler(() => this._replaceFormWithEvent());
 
-    replace(this.#addEventView, this.#eventView);
+    replace(this.#editEventView, this.#eventView);
   }
 
   _replaceFormWithEvent() {
-    if (!this.#addEventView) {
+    if (!this.#editEventView) {
       return;
     }
-    replace(this.#eventView, this.#addEventView);
-    this.#addEventView.removeElement();
-    this.#addEventView = null;
+    replace(this.#eventView, this.#editEventView);
+    this.#editEventView.removeElement();
+    this.#editEventView = null;
   }
 }
