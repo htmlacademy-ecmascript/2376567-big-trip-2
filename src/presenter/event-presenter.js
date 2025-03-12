@@ -1,5 +1,5 @@
 import EventView from '../view/event-view.js';
-import AddEventView from '../view/add-event-view.js';
+import EditEventView from '../view/edit-event-view.js';
 import { replace } from '../framework/render.js';
 
 export default class EventPresenter {
@@ -7,22 +7,24 @@ export default class EventPresenter {
   #destination = null;
   #offer = null;
   #eventView = null;
-  #addEventView = null;
+  #editEventView = null;
   #onDataChange = null;
   #destinationAll = null;
+  #offerAll = null;
   #onFormOpen = null;
 
-  constructor({ event, destination, offer, onDataChange, destinationAll, onFormOpen }) {
+  constructor({ event, destination, offer, onDataChange, destinationAll, offerAll, onFormOpen }) {
     this.#event = event;
     this.#destination = destination;
     this.#offer = offer;
     this.#onDataChange = onDataChange;
     this.#destinationAll = destinationAll;
+    this.#offerAll = offerAll;
     this.#onFormOpen = onFormOpen;
   }
 
   init(container) {
-    this.#eventView = new EventView(this.#event, this.#destination, this.#offer);
+    this.#eventView = new EventView(this.#event, this.#destination, this.#offer, this.#destinationAll, this.#offerAll);
     this.#eventView.setRollupClickHandler(() => this._replaceEventWithForm());
     this.#eventView.setFavoriteBtnClickHandler(() => this.#onDataChange({ ...this.#event, favorite: !this.#event.favorite }));
 
@@ -35,7 +37,7 @@ export default class EventPresenter {
     this.#offer = offer;
 
     const prevEventView = this.#eventView;
-    this.#eventView = new EventView(this.#event, this.#destination, this.#offer);
+    this.#eventView = new EventView(this.#event, this.#destination, this.#offer, this.#destinationAll, this.#offerAll);
     this.#eventView.setRollupClickHandler(() => this._replaceEventWithForm());
     this.#eventView.setFavoriteBtnClickHandler(() => this.#onDataChange({ ...this.#event, favorite: !this.#event.favorite }));
 
@@ -44,7 +46,7 @@ export default class EventPresenter {
   }
 
   resetView() {
-    if (this.#addEventView) {
+    if (this.#editEventView) {
       this._replaceFormWithEvent();
     }
   }
@@ -52,17 +54,21 @@ export default class EventPresenter {
   _replaceEventWithForm() {
     this.#onFormOpen();
 
-    this.#addEventView = new AddEventView(this.#event, this.#destination, this.#offer, this.#destinationAll);
-    this.#addEventView.setFormSubmitHandler(() => this._replaceFormWithEvent());
-    this.#addEventView.setEscKeyDownHandler(() => this._replaceFormWithEvent());
-    this.#addEventView.setCloseButtonClickHandler(() => this._replaceFormWithEvent());
+    this.#editEventView = new EditEventView(this.#event, this.#destination, this.#offer, this.#destinationAll, this.#offerAll);
+    this.#editEventView.setFormSubmitHandler(() => this._replaceFormWithEvent());
+    this.#editEventView.setEscKeyDownHandler(() => this._replaceFormWithEvent());
+    this.#editEventView.setCloseButtonClickHandler(() => this._replaceFormWithEvent());
+    this.#editEventView.setRollupButtonClickHandler(() => this._replaceFormWithEvent());
 
-    replace(this.#addEventView, this.#eventView);
+    replace(this.#editEventView, this.#eventView);
   }
 
   _replaceFormWithEvent() {
-    replace(this.#eventView, this.#addEventView);
-    this.#addEventView.removeElement();
-    this.#addEventView = null;
+    if (!this.#editEventView) {
+      return;
+    }
+    replace(this.#eventView, this.#editEventView);
+    this.#editEventView.removeElement();
+    this.#editEventView = null;
   }
 }
