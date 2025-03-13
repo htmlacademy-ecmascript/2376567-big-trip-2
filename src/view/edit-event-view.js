@@ -1,6 +1,9 @@
 import dayjs from 'dayjs';
 import { POINT_TYPES, DESTINATIONS } from '../const.js';
 import AbstractStatefulView from '../framework/view/abstract-stateful-view.js';
+import flatpickr from 'flatpickr';
+import 'flatpickr/dist/flatpickr.min.css';
+
 
 const DATE_FORMAT = 'DD/MM/YY HH:mm';
 
@@ -118,6 +121,8 @@ function createEditEventTemplate(state) {
 export default class EditEventView extends AbstractStatefulView {
   #destinations = null;
   #offers = null;
+  #datepickerStart = null;
+  #datepickerEnd = null;
 
   constructor(event, destination, offer, destinations, offers) {
     super();
@@ -139,6 +144,40 @@ export default class EditEventView extends AbstractStatefulView {
     return createEditEventTemplate(this._state);
   }
 
+  _setDatepicker() {
+    this.#datepickerStart = flatpickr(
+      this.element.querySelector('#event-start-time-1'), {
+        enableTime: true,
+        dateFormat: 'd/m/y H:i',
+        defaultDate: this._state.dateFrom,
+        onChange: this._changeStartDateHandler
+      }
+    );
+
+    this.#datepickerEnd = flatpickr(
+      this.element.querySelector('#event-end-time-1'), {
+        enableTime: true,
+        dateFormat: 'd/m/y H:i',
+        defaultDate: this._state.dateTo,
+        minDate: this._state.dateFrom,
+        onChange: this._changeEndDateHandler
+      }
+    );
+  }
+
+  _changeStartDateHandler = ([userDate]) => {
+    this.updateElement({
+      dateFrom: userDate,
+    });
+    this.#datepickerEnd.set('minDate', userDate);
+  };
+
+  _changeEndDateHandler = ([userDate]) => {
+    this.updateElement({
+      dateTo: userDate,
+    });
+  };
+
   _restoreHandlers() {
     this.setTypeChangeHandler();
     this.setDestinationChangeHandler();
@@ -146,6 +185,7 @@ export default class EditEventView extends AbstractStatefulView {
     this.setEscKeyDownHandler(this._callback.escKeyDown);
     this.setCloseButtonClickHandler(this._callback.closeButtonClick);
     this.setRollupButtonClickHandler(this._callback.rollupButtonClick);
+    this._setDatepicker();
   }
 
   setTypeChangeHandler() {
@@ -233,5 +273,18 @@ export default class EditEventView extends AbstractStatefulView {
     evt.preventDefault();
     this._callback.closeButtonClick();
   };
-}
 
+  removeElement() {
+    super.removeElement();
+
+    if (this.#datepickerStart) {
+      this.#datepickerStart.destroy();
+      this.#datepickerStart = null;
+    }
+
+    if (this.#datepickerEnd) {
+      this.#datepickerEnd.destroy();
+      this.#datepickerEnd = null;
+    }
+  }
+}
