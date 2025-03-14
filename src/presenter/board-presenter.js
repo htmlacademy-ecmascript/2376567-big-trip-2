@@ -3,7 +3,7 @@ import { NoPointView } from '../view/no-point-view.js';
 import { render } from '../framework/render.js';
 import SortPresenter from './sort-presenter.js';
 import EventsPresenter from './events-presenter.js';
-import { updateItem } from '../utils.js';
+
 export default class BoardPresenter {
   #eventsListComponent = new EventsListView();
   #boardContainer = null;
@@ -20,10 +20,6 @@ export default class BoardPresenter {
   }
 
   init() {
-    this.events = [...this.#boardModel.events];
-    this.destinations = [...this.#boardModel.destinations];
-    this.offers = [...this.#boardModel.offers];
-
     this._renderBoard();
   }
 
@@ -41,23 +37,28 @@ export default class BoardPresenter {
   }
 
   _handleEventChange = (updatedEvent) => {
-    this.events = updateItem(this.events, updatedEvent);
+    this.#boardModel.updateEvent('UPDATE_EVENT', updatedEvent);
     this.#eventsPresenter.updateEvent(updatedEvent);
   };
 
   _renderBoard() {
+    const events = this.#boardModel.events;
+    const destinations = this.#boardModel.destinations;
+    const offers = this.#boardModel.offers;
+
     const eventsPresenterParams = {
-      events: this.events,
-      destinations: this.destinations,
-      offers: this.offers,
+      events,
+      destinations,
+      offers,
       boardModel: this.#boardModel,
       eventsListComponent: this.#eventsListComponent,
       onDataChange: this._handleEventChange,
     };
+
     this.#eventsPresenter = new EventsPresenter(eventsPresenterParams);
     this._renderSort(this.#eventsPresenter);
 
-    if (this.events.length === 0) {
+    if (events.length === 0) {
       const noPointView = new NoPointView();
       render(noPointView, this.#boardContainer);
     }
@@ -68,7 +69,7 @@ export default class BoardPresenter {
 
   _handleFilterUpdate(event) {
     if (event === 'FILTER_CHANGED') {
-      const filteredEvents = this.#filtersPresenter.filterEvents(this.events, this.#filtersPresenter.filters);
+      const filteredEvents = this.#filtersPresenter.filterEvents(this.#boardModel.events, this.#filtersPresenter.filters);
       this.#eventsPresenter.updateEvents(filteredEvents);
     }
   }
