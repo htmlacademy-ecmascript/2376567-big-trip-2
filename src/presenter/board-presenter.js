@@ -8,15 +8,15 @@ export default class BoardPresenter {
   #eventsListComponent = new EventsListView();
   #boardContainer = null;
   #boardModel = null;
+  #filterModel = null;
   #eventsPresenter = null;
-  #filtersPresenter = null;
 
-  constructor({ boardContainer, boardModel, filtersPresenter }) {
+  constructor({ boardContainer, boardModel, filterModel }) {
     this.#boardContainer = boardContainer;
     this.#boardModel = boardModel;
-    this.#filtersPresenter = filtersPresenter;
+    this.#filterModel = filterModel;
 
-    this.#filtersPresenter.addObserver((event) => this._handleFilterUpdate(event));
+    this.#filterModel.addObserver((filter) => this._handleFilterUpdate(filter));
   }
 
   init() {
@@ -67,11 +67,9 @@ export default class BoardPresenter {
     this._renderEvents();
   }
 
-  _handleFilterUpdate(event) {
-    if (event === 'FILTER_CHANGED') {
-      const filteredEvents = this.#filtersPresenter.filterEvents(this.#boardModel.events, this.#filtersPresenter.filters);
-      this.#eventsPresenter.updateEvents(filteredEvents);
-    }
+  _handleFilterUpdate() {
+    const filteredEvents = this.#filterModel.filterEvents(this.#boardModel.events);
+    this.#eventsPresenter.updateEvents(filteredEvents);
   }
 
   updateEvents(filteredEvents) {
