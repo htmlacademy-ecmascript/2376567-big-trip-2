@@ -5,7 +5,7 @@ export default class BoardModel extends Observable {
   #events = [];
   #allOffers = getOffers();
   #allDestinations = getDestination();
-  EVENT_QTY = 10;
+  EVENT_QTY = 5;
 
   constructor() {
     super();

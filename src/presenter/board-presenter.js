@@ -53,6 +53,8 @@ export default class BoardPresenter {
       boardModel: this.#boardModel,
       eventsListComponent: this.#eventsListComponent,
       onDataChange: this._handleEventChange,
+      filterModel: this.#filterModel,
+      boardContainer: this.#boardContainer,
     };
 
     this.#eventsPresenter = new EventsPresenter(eventsPresenterParams);
