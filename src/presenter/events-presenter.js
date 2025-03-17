@@ -1,6 +1,7 @@
 import EventPresenter from './event-presenter.js';
 import NoEventsView from '../view/no-events-view.js';
 import { render } from '../framework/render.js';
+import { USER_ACTIONS } from '../const.js';
 
 export default class EventsPresenter {
   events = null;
@@ -22,6 +23,13 @@ export default class EventsPresenter {
     this.#onDataChange = onDataChange;
     this.#filterModel = filterModel;
     this.#boardContainer = boardContainer;
+
+    // this.#boardModel.addObserver((actionType, payload) => {
+    //   if (actionType === USER_ACTIONS.DELETE_EVENT) {
+    //     this._renderEvents();
+    //   }
+    // });
+
   }
 
   init() {
@@ -40,6 +48,7 @@ export default class EventsPresenter {
       destinationAll: this.#destinations,
       offerAll: this.#offers,
       onFormOpen: this.resetAllViews.bind(this),
+      onUserAction: this.handleUserAction.bind(this),
     });
 
     eventPresenter.init(this.#eventsListComponent.element);
@@ -72,8 +81,25 @@ export default class EventsPresenter {
       const noEventsView = new NoEventsView(message);
       render(noEventsView, this.#eventsListComponent.element);
     } else {
+      console.log(this.events);
       this.events.forEach((event) => this._renderEvent(event));
     }
+  }
+
+  handleUserAction(actionType, payload) {
+    switch (actionType) {
+      case USER_ACTIONS.ADD_EVENT:
+        this.#boardModel.addEvent(payload);
+        break;
+      case USER_ACTIONS.UPDATE_EVENT:
+        this.#boardModel.updateEvent(payload);
+        break;
+      case USER_ACTIONS.DELETE_EVENT:
+        this.#boardModel.deleteEvent(payload);
+        break;
+    }
+    this.events = this.#boardModel.events;
+    this._renderEvents();
   }
 
   updateEvent(updatedEvent) {

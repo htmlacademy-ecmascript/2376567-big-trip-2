@@ -1,5 +1,6 @@
 import { getRandomEvent, getOffers, getDestination } from '../mock/event';
 import Observable from '../framework/observable.js';
+import { USER_ACTIONS } from '../const.js';
 
 export default class BoardModel extends Observable {
   #events = [];
@@ -41,61 +42,37 @@ export default class BoardModel extends Observable {
     return offersType.offers.filter((item) => itemsId.find((id) => item.id === id));
   }
 
-  updateEvent(updateType, update) {
-    const index = this.#events.findIndex((event) => event.id === update.id);
-
-    if (index === -1) {
-      throw new Error('Can\'t update non-existing event');
-    }
-
-    this.#events = [
-      ...this.#events.slice(0, index),
-      update,
-      ...this.#events.slice(index + 1)
-    ];
-
-    this._notify(updateType, update);
+  // Метод для добавления нового события
+  addEvent(event) {
+    this.#events = [event, ...this.#events];
+    this._notify(USER_ACTIONS.ADD_EVENT, event);
   }
 
-  // patchEvent(updateType, eventId, updates) {
-  //   const index = this.#events.findIndex((event) => event.id === eventId);
-
-  //   if (index === -1) {
-  //     throw new Error('Can\'t patch non-existing event');
-  //   }
-
-  //   const updatedEvent = { ...this.#events[index], ...updates };
-
-  //   this.#events = [
-  //     ...this.#events.slice(0, index),
-  //     updatedEvent,
-  //     ...this.#events.slice(index + 1)
-  //   ];
-
-  //   this._notify(updateType, updatedEvent);
-  // }
-
-  addEvent(updateType, newEvent) {
-    this.#events = [
-      newEvent,
-      ...this.#events
-    ];
-
-    this._notify(updateType, newEvent);
-  }
-
-  deleteEvent(updateType, event) {
-    const index = this.#events.findIndex((currentEvent) => currentEvent.id === event.id);
-
+  // Метод для обновления существующего события
+  updateEvent(event) {
+    const index = this.#events.findIndex((e) => e.id === event.id);
     if (index === -1) {
-      throw new Error('Can\'t delete non-existing event');
+      throw new Error('Event not found');
     }
-
     this.#events = [
       ...this.#events.slice(0, index),
-      ...this.#events.slice(index + 1)
+      event,
+      ...this.#events.slice(index + 1),
     ];
+    this._notify(USER_ACTIONS.UPDATE_EVENT, event);
+  }
 
-    this._notify(updateType);
+  // Метод для удаления существующего события
+  deleteEvent(eventId) {
+    const index = this.#events.findIndex((e) => e.id === eventId);
+    // console.log(index);
+    if (index === -1) {
+      throw new Error('Event not found');
+    }
+    this.#events = [
+      ...this.#events.slice(0, index),
+      ...this.#events.slice(index + 1),
+    ];
+    this._notify(USER_ACTIONS.DELETE_EVENT, eventId);
   }
 }

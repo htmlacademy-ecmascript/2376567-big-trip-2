@@ -12,8 +12,9 @@ export default class EventPresenter {
   #destinationAll = null;
   #offerAll = null;
   #onFormOpen = null;
+  #onUserAction = null;
 
-  constructor({ event, destination, offer, onDataChange, destinationAll, offerAll, onFormOpen }) {
+  constructor({ event, destination, offer, onDataChange, destinationAll, offerAll, onFormOpen, onUserAction }) {
     this.#event = event;
     this.#destination = destination;
     this.#offer = offer;
@@ -21,6 +22,7 @@ export default class EventPresenter {
     this.#destinationAll = destinationAll;
     this.#offerAll = offerAll;
     this.#onFormOpen = onFormOpen;
+    this.#onUserAction = onUserAction;
   }
 
   init(container) {
@@ -54,21 +56,37 @@ export default class EventPresenter {
   _replaceEventWithForm() {
     this.#onFormOpen();
 
-    this.#editEventView = new EditEventView(this.#event, this.#destination, this.#offer, this.#destinationAll, this.#offerAll);
+    this.#editEventView = new EditEventView(
+      this.#event,
+      this.#destination,
+      this.#offer,
+      this.#destinationAll,
+      this.#offerAll,
+      () => this._deleteFormEvent()
+    );
     this.#editEventView.setFormSubmitHandler(() => this._replaceFormWithEvent());
     this.#editEventView.setEscKeyDownHandler(() => this._replaceFormWithEvent());
-    this.#editEventView.setCloseButtonClickHandler(() => this._replaceFormWithEvent());
+    this.#editEventView.setCloseButtonClickHandler(() => this._deleteFormEvent());
     this.#editEventView.setRollupButtonClickHandler(() => this._replaceFormWithEvent());
 
-    replace(this.#editEventView, this.#eventView);
+    if (this.#eventView.element.parentElement) {
+      replace(this.#editEventView, this.#eventView);
+    }
   }
 
   _replaceFormWithEvent() {
     if (!this.#editEventView) {
       return;
     }
-    replace(this.#eventView, this.#editEventView);
+    const parent = this.#editEventView.element.parentElement;
+    if (parent) {
+      parent.replaceChild(this.#eventView.element, this.#editEventView.element);
+    }
     this.#editEventView.removeElement();
     this.#editEventView = null;
+  }
+
+  _deleteFormEvent() {
+    this.#onUserAction('DELETE_EVENT', this.#event.id);
   }
 }
