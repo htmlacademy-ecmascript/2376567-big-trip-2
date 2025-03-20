@@ -1,52 +1,34 @@
-import { FILTERS } from '../const.js';
-import Observable from '../framework/observable.js';
-import FilterView from '../view/filtres-view.js';
 import { render } from '../framework/render.js';
+import FilterView from '../view/filtres-view.js';
 import dayjs from 'dayjs';
 import isBetween from 'dayjs/plugin/isBetween';
 
 dayjs.extend(isBetween);
 
-export default class FiltersPresenter extends Observable {
-  #filters = { ...FILTERS[0] };
+export default class FiltersPresenter {
+  #filterModel = null;
   #container = null;
 
-  constructor() {
-    super();
+  constructor({ filterModel }) {
+    this.#filterModel = filterModel;
+    // this.#filterModel.addObserver(this._handleModelChange.bind(this));
   }
 
   init() {
     this.#container = document.body.querySelector('.trip-controls__filters');
-    const filterView = new FilterView();
+    const filterView = new FilterView(this.#filterModel.filters);
     render(filterView, this.#container);
     filterView.setFiltersClickHandler(this._handleFilterChange.bind(this));
   }
 
-  get filters() {
-    return this.#filters;
-  }
-
   _handleFilterChange(filter) {
-    if (this.#filters.value === filter.value) {
+    if (this.#filterModel.filters.value === filter.value) {
       return;
     }
-
-    this.#filters = filter;
-    this._notify('FILTER_CHANGED', filter);
+    this.#filterModel.setFilter(filter);
   }
 
-  filterEvents(events) {
-    switch (this.#filters.value) {
-      case 'everything':
-        return events;
-      case 'future':
-        return events.filter((event) => dayjs(event.dateFrom).isAfter(dayjs()));
-      case 'present':
-        return events.filter((event) => dayjs().isBetween(dayjs(event.dateFrom), dayjs(event.dateTo)));
-      case 'past':
-        return events.filter((event) => dayjs(event.dateFrom).isBefore(dayjs()));
-      default:
-        return events;
-    }
-  }
+  // _handleModelChange(filter) {
+  //   console.log('FiltersPresenter: Фильтр изменен:', filter);
+  // }
 }

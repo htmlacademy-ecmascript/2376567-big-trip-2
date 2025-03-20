@@ -1,21 +1,22 @@
 import HeaderPresenter from './presenter/header-presenter.js';
 import BoardPresenter from './presenter/board-presenter.js';
 import BoardModel from './model/board-model.js';
-import FiltersPresenter from './presenter/filters-presenter.js';
+import FilterModel from './model/filter-model.js';
 
 const boardModel = new BoardModel();
-
-const filtersPresenter = new FiltersPresenter();
-
-const headerPresenter = new HeaderPresenter({
-  headerContainer: document.querySelector('.page-header'),
-  filtersPresenter: filtersPresenter,
-});
+const filterModel = new FilterModel();
 
 const boardPresenter = new BoardPresenter({
   boardContainer: document.querySelector('.trip-events'),
   boardModel: boardModel,
-  filtersPresenter: filtersPresenter,
+  filterModel: filterModel,
+});
+
+const headerPresenter = new HeaderPresenter({
+  headerContainer: document.querySelector('.page-header'),
+  filterModel: filterModel,
+  boardPresenter: boardPresenter,
+  boardModel: boardModel,
 });
 
 headerPresenter.init();
