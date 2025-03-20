@@ -64,6 +64,7 @@ export default class EventPresenter {
       this.#offerAll,
       () => this._deleteFormEvent()
     );
+
     this.#editEventView.setFormSubmitHandler(() => this._replaceFormWithEvent());
     this.#editEventView.setEscKeyDownHandler(() => this._replaceFormWithEvent());
     this.#editEventView.setCloseButtonClickHandler(() => this._deleteFormEvent());

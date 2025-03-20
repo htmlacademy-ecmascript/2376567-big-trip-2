@@ -1,12 +1,11 @@
 import AbstractView from '../framework/view/abstract-view.js';
-import { humanizeTaskDueDate, getDuration } from '../utils';
+import {getDuration } from '../utils';
 import dayjs from 'dayjs';
 
 function createEventTemplate(event, destination, offer) {
-
   const { basePrice, type, favorite, dateFrom, dateTo } = event;
   const { offers } = offer;
-  const { name } = destination;
+  const { name = '' } = destination || {};
 
   const getDateWithHour = (date) => dayjs(date).format('HH:mm');
 
@@ -22,7 +21,7 @@ function createEventTemplate(event, destination, offer) {
 
   return (`
     <div class="event">
-       <time class="event__date" datetime="${dateFrom}">${humanizeTaskDueDate(dateFrom)}</time>
+       <time class="event__date" datetime="${dateFrom}">${dayjs(dateFrom).format('DD MMM')}</time>
       <div class="event__type">
         <img class="event__type-icon" width="42" height="42" src="img/icons/${type}.png" alt="Event type icon">
       </div>

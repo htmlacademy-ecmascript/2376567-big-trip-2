@@ -28,7 +28,32 @@ function createTripMainTemplate() {
   );
 }
 export default class TripMainView extends AbstractView {
+  #newEventButton = null;
+
+  constructor() {
+    super();
+    this._newEventButtonHandler = this._newEventButtonHandler.bind(this);
+  }
+
   get template() {
     return createTripMainTemplate();
+  }
+
+  setNewEventButtonHandler(callback) {
+    this._callback.newEventButtonClick = callback;
+    this.#newEventButton = this.element.querySelector('.trip-main__event-add-btn');
+    this.#newEventButton.addEventListener('click', this._newEventButtonHandler);
+  }
+
+  _newEventButtonHandler() {
+    this._callback.newEventButtonClick();
+  }
+
+  blockNewEventButton() {
+    this.#newEventButton.disabled = true;
+  }
+
+  unblockNewEventButton() {
+    this.#newEventButton.disabled = false;
   }
 }

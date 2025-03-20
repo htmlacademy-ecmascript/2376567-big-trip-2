@@ -3,6 +3,8 @@ import { NoPointView } from '../view/no-point-view.js';
 import { render } from '../framework/render.js';
 import SortPresenter from './sort-presenter.js';
 import EventsPresenter from './events-presenter.js';
+import { USER_ACTIONS } from '../const.js';
+import { FILTERS } from '../const.js';
 
 export default class BoardPresenter {
   #eventsListComponent = new EventsListView();
@@ -10,6 +12,7 @@ export default class BoardPresenter {
   #boardModel = null;
   #filterModel = null;
   #eventsPresenter = null;
+  #addEventForm = null;
 
   constructor({ boardContainer, boardModel, filterModel }) {
     this.#boardContainer = boardContainer;
@@ -17,6 +20,7 @@ export default class BoardPresenter {
     this.#filterModel = filterModel;
 
     this.#filterModel.addObserver((filter) => this._handleFilterUpdate(filter));
+    this.#boardModel.addObserver(this._handleModelChange.bind(this));
   }
 
   init() {
@@ -37,7 +41,7 @@ export default class BoardPresenter {
   }
 
   _handleEventChange = (updatedEvent) => {
-    this.#boardModel.updateEvent('UPDATE_EVENT', updatedEvent);
+    this.#boardModel.updateEvent(updatedEvent);
     this.#eventsPresenter.updateEvent(updatedEvent);
   };
 
@@ -77,4 +81,34 @@ export default class BoardPresenter {
   updateEvents(filteredEvents) {
     this.#eventsPresenter.updateEvents(filteredEvents);
   }
+
+  showAddEventForm(addEventView) {
+    if (this.#addEventForm) {
+      this.#addEventForm.removeElement();
+    }
+    this.#addEventForm = addEventView;
+    render(this.#addEventForm, this.#eventsListComponent.element, 'afterbegin');
+    this.#eventsPresenter.resetAllViews();
+  }
+
+  _handleModelChange(actionType) {
+    switch (actionType) {
+      case USER_ACTIONS.ADD_EVENT:
+      case USER_ACTIONS.UPDATE_EVENT:
+      case USER_ACTIONS.DELETE_EVENT:
+        this.updateEvents(this.#boardModel.events);
+        break;
+      default:
+    }
+  }
+
+  resetAllViews() {
+    this.#eventsPresenter.resetAllViews();
+  }
+
+  resetFiltersAndSorting() {
+    this.#filterModel.setFilter(FILTERS[0]);
+    this.#eventsPresenter.resetAllViews();
+  }
 }
+

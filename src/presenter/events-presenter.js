@@ -23,13 +23,6 @@ export default class EventsPresenter {
     this.#onDataChange = onDataChange;
     this.#filterModel = filterModel;
     this.#boardContainer = boardContainer;
-
-    // this.#boardModel.addObserver((actionType, payload) => {
-    //   if (actionType === USER_ACTIONS.DELETE_EVENT) {
-    //     this._renderEvents();
-    //   }
-    // });
-
   }
 
   init() {
@@ -81,7 +74,6 @@ export default class EventsPresenter {
       const noEventsView = new NoEventsView(message);
       render(noEventsView, this.#eventsListComponent.element);
     } else {
-      console.log(this.events);
       this.events.forEach((event) => this._renderEvent(event));
     }
   }
@@ -98,8 +90,6 @@ export default class EventsPresenter {
         this.#boardModel.deleteEvent(payload);
         break;
     }
-    this.events = this.#boardModel.events;
-    this._renderEvents();
   }
 
   updateEvent(updatedEvent) {

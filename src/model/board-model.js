@@ -10,6 +10,7 @@ export default class BoardModel extends Observable {
 
   constructor() {
     super();
+
     for (let i = 0; i < this.EVENT_QTY; i++) {
       const id = i + 1;
       this.#events.push(getRandomEvent(id));
@@ -42,13 +43,11 @@ export default class BoardModel extends Observable {
     return offersType.offers.filter((item) => itemsId.find((id) => item.id === id));
   }
 
-  // Метод для добавления нового события
   addEvent(event) {
     this.#events = [event, ...this.#events];
     this._notify(USER_ACTIONS.ADD_EVENT, event);
   }
 
-  // Метод для обновления существующего события
   updateEvent(event) {
     const index = this.#events.findIndex((e) => e.id === event.id);
     if (index === -1) {
@@ -62,10 +61,8 @@ export default class BoardModel extends Observable {
     this._notify(USER_ACTIONS.UPDATE_EVENT, event);
   }
 
-  // Метод для удаления существующего события
   deleteEvent(eventId) {
     const index = this.#events.findIndex((e) => e.id === eventId);
-    // console.log(index);
     if (index === -1) {
       throw new Error('Event not found');
     }

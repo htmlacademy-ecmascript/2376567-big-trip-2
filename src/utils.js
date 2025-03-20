@@ -35,4 +35,11 @@ function updateItem(items, update) {
   return items.map((item) => item.id === update.id ? update : item);
 }
 
-export {getRandomInt, returnRandomElem, getRandomUniqueInt, humanizeTaskDueDate, getDuration, updateItem};
+const convertDateToISO = (dateString) => {
+  const [datePart, timePart] = dateString.split(' ');
+  const [day, month, year] = datePart.split('/');
+  const formattedDate = `20${year}-${month}-${day}T${timePart}:00.000Z`;
+  return new Date(formattedDate).toISOString();
+};
+
+export {getRandomInt, returnRandomElem, getRandomUniqueInt, humanizeTaskDueDate, getDuration, updateItem, convertDateToISO};
