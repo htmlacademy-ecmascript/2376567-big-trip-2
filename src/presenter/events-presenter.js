@@ -90,6 +90,8 @@ export default class EventsPresenter {
         this.#boardModel.deleteEvent(payload);
         break;
     }
+    this.events = this.#boardModel.events;
+    this._renderEvents();
   }
 
   updateEvent(updatedEvent) {

@@ -1,6 +1,7 @@
 import EventView from '../view/event-view.js';
 import EditEventView from '../view/edit-event-view.js';
 import { replace } from '../framework/render.js';
+import { convertDateToISO } from '../utils.js';
 
 export default class EventPresenter {
   #event = null;
@@ -65,7 +66,7 @@ export default class EventPresenter {
       () => this._deleteFormEvent()
     );
 
-    this.#editEventView.setFormSubmitHandler(() => this._replaceFormWithEvent());
+    this.#editEventView.setFormSubmitHandler(() => this._handleFormSubmit());
     this.#editEventView.setEscKeyDownHandler(() => this._replaceFormWithEvent());
     this.#editEventView.setCloseButtonClickHandler(() => this._deleteFormEvent());
     this.#editEventView.setRollupButtonClickHandler(() => this._replaceFormWithEvent());
@@ -89,5 +90,28 @@ export default class EventPresenter {
 
   _deleteFormEvent() {
     this.#onUserAction('DELETE_EVENT', this.#event.id);
+  }
+
+  _handleFormSubmit() {
+    const formData = new FormData(this.#editEventView.element);
+    const destinationName = formData.get('event-destination');
+    const destinationIndex = this.#destinationAll.findIndex((destination) => destination.name === destinationName) + 1;
+
+    const dateFromString = formData.get('event-start-time');
+    const dateToString = formData.get('event-end-time');
+
+    const updatedEvent = {
+      id: this.#event.id,
+      type: formData.get('event-type'),
+      dateFrom: convertDateToISO(dateFromString),
+      dateTo: convertDateToISO(dateToString),
+      basePrice: Number(formData.get('event-price')),
+      destination: destinationIndex,
+      offersId: Array.from(this.#editEventView.element.querySelectorAll('.event__offer-checkbox:checked')).map((input) => Number(input.value)),
+      favorite: this.#event.favorite,
+    };
+
+    this.#onDataChange(updatedEvent);
+    this._replaceFormWithEvent();
   }
 }
