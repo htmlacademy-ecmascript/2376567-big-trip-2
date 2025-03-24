@@ -7,6 +7,7 @@ export default class BoardModel extends Observable {
   #allOffers = getOffers();
   #allDestinations = getDestination();
   EVENT_QTY = 5;
+  #currentSortType = 'day';
 
   constructor() {
     super();
@@ -50,9 +51,6 @@ export default class BoardModel extends Observable {
 
   updateEvent(event) {
     const index = this.#events.findIndex((e) => e.id === event.id);
-    if (index === -1) {
-      throw new Error('Event not found');
-    }
     this.#events = [
       ...this.#events.slice(0, index),
       event,
@@ -63,13 +61,20 @@ export default class BoardModel extends Observable {
 
   deleteEvent(eventId) {
     const index = this.#events.findIndex((e) => e.id === eventId);
-    if (index === -1) {
-      throw new Error('Event not found');
-    }
     this.#events = [
       ...this.#events.slice(0, index),
       ...this.#events.slice(index + 1),
     ];
     this._notify(USER_ACTIONS.DELETE_EVENT, eventId);
   }
+
+  changeSortType(sortType) {
+    this.#currentSortType = sortType;
+    this._notify('SORT_CHANGED', sortType);
+  }
+
+  getCurrentSortType() {
+    return this.#currentSortType;
+  }
+
 }

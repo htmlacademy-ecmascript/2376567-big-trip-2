@@ -31,6 +31,7 @@ export default class BoardPresenter {
     const sortPresenter = new SortPresenter({
       boardContainer: this.#boardContainer,
       eventsPresenter: eventsPresenter,
+      boardModel: this.#boardModel,
     });
 
     sortPresenter.init();

@@ -1,5 +1,5 @@
 import { render } from '../framework/render.js';
-import FilterView from '../view/filtres-view.js';
+import FilterView from '../view/filters-view.js';
 import dayjs from 'dayjs';
 import isBetween from 'dayjs/plugin/isBetween';
 
@@ -26,6 +26,8 @@ export default class FiltersPresenter {
       return;
     }
     this.#filterModel.setFilter(filter);
+
+    this.#filterModel._notify('FILTER_CHANGED', filter);
   }
 
   // _handleModelChange(filter) {

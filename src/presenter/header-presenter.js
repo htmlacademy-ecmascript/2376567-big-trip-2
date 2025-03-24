@@ -17,9 +17,12 @@ export default class HeaderPresenter {
     this.#headerContainer = headerContainer;
     this.#filterModel = filterModel;
     this.#filtersPresenter = new FiltersPresenter({ filterModel: this.#filterModel });
-    // this.#filterModel.addObserver((filter) => this._handleFilterUpdate(filter));
     this.#boardPresenter = boardPresenter;
     this.#boardModel = boardModel;
+
+    this.#filterModel.addObserver(this._handleFilterChange.bind(this));
+
+    this.#boardModel.addObserver(this._handleSortChange.bind(this));
   }
 
   init() {
@@ -88,7 +91,15 @@ export default class HeaderPresenter {
     this.#boardPresenter.updateEvents(this.#boardModel.events);
   }
 
-  // _handleFilterUpdate(filter) {
-  //   console.log('HeaderPresenter: Фильтр изменен:', filter);
-  // }
+  _handleFilterChange() {
+    if (this.#isFormOpen) {
+      this._closeForm();
+    }
+  }
+
+  _handleSortChange(event) {
+    if (event === 'SORT_CHANGED' && this.#isFormOpen) {
+      this._closeForm();
+    }
+  }
 }
