@@ -18,6 +18,11 @@ export default class BoardModel extends Observable {
     }
   }
 
+  set events(events) {
+    this.#events = events;
+    this._notify('EVENTS_LOADED', events);
+  }
+
   get events() {
     return this.#events;
   }
@@ -76,5 +81,10 @@ export default class BoardModel extends Observable {
   getCurrentSortType() {
     return this.#currentSortType;
   }
+
+  // setEvents(events) {
+  //   this.#events = events;
+  //   this._notify('EVENTS_LOADED', events);
+  // }
 
 }

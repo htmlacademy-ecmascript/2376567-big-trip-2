@@ -1,5 +1,5 @@
 import EventsListView from '../view/events-list-view.js';
-import { NoPointView } from '../view/no-point-view.js';
+import NoPointView from '../view/no-point-view.js';
 import { render } from '../framework/render.js';
 import SortPresenter from './sort-presenter.js';
 import EventsPresenter from './events-presenter.js';
