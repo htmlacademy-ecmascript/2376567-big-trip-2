@@ -1,6 +1,6 @@
 const POINT_TYPES = ['taxi', 'bus', 'train', 'ship', 'drive', 'flight', 'check-in', 'sightseeing', 'restaurant'];
 
-const DESTINATIONS = ['Amsterdam', 'Chamonix', 'Geneva', 'Paris', 'Berlin', 'Prague', 'Tokyo', 'Moscow', 'Saint-Petersburg'];
+const DESTINATIONS = ['Vien','Moscow','Rotterdam','Kioto','Sochi','Amsterdam','Oslo','Valencia'];
 
 const FILTERS = [
   {
@@ -64,6 +64,7 @@ const USER_ACTIONS = {
   DELETE_EVENT: 'DELETE_EVENT',
   LOAD_EVENTS: 'LOAD_EVENTS',
   LOAD_ERROR: 'LOAD_ERROR',
+  EVENTS_LOADED: 'EVENTS_LOADED',
 };
 
 export { POINT_TYPES, FILTERS, SORT_BUTTONS, SORT_TYPES, DESTINATIONS, USER_ACTIONS };

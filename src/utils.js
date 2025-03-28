@@ -35,11 +35,28 @@ function updateItem(items, update) {
   return items.map((item) => item.id === update.id ? update : item);
 }
 
-const convertDateToISO = (dateString) => {
-  const [datePart, timePart] = dateString.split(' ');
-  const [day, month, year] = datePart.split('/');
-  const formattedDate = `20${year}-${month}-${day}T${timePart}:00.000Z`;
-  return new Date(formattedDate).toISOString();
+const convertDateToISO = (date) => {
+  if (!date) {
+    return null;
+  }
+
+  if (typeof date === 'string' && date.endsWith('Z')) {
+    return date;
+  }
+
+  if (typeof date === 'string') {
+    const [day, month, year, hour, minute] = date.split(/[/ :]/);
+    const fullYear = `20${year}`;
+    const dateObj = new Date(`${fullYear}-${month}-${day}T${hour}:${minute}:00.000Z`);
+    return dateObj.toISOString();
+  }
+
+  if (date instanceof Date) {
+    return date.toISOString();
+  }
+
+  console.error('Unsupported date format:', date);
+  return null;
 };
 
 export {getRandomInt, returnRandomElem, getRandomUniqueInt, humanizeTaskDueDate, getDuration, updateItem, convertDateToISO};

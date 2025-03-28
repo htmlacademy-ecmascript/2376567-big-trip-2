@@ -41,9 +41,14 @@ export default class BoardPresenter {
     this.#eventsPresenter.init(eventsListComponent);
   }
 
-  _handleEventChange = (updatedEvent) => {
-    this.#boardModel.updateEvent(updatedEvent);
-    this.#eventsPresenter.updateEvent(updatedEvent);
+  _handleEventChange = async (updatedEvent) => {
+    try {
+      await this.#boardModel.updateEvent(updatedEvent);
+      this.#eventsPresenter.updateEvent(updatedEvent);
+    } catch (err) {
+      console.error('Ошибка при обновлении события', err);
+      throw err;
+    }
   };
 
   _renderBoard() {
@@ -100,6 +105,7 @@ export default class BoardPresenter {
         this.updateEvents(this.#boardModel.events);
         break;
       default:
+        console.warn(`Необработанное событие: ${actionType}`);
     }
   }
 

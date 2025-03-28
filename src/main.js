@@ -14,7 +14,7 @@ const siteMainElement = document.querySelector('.trip-events');
 const siteHeaderElement = document.querySelector('.page-header');
 
 const eventsApiService = new EventsApiService(END_POINT, AUTHORIZATION);
-const boardModel = new BoardModel();
+const boardModel = new BoardModel({ eventsApiService });
 const filterModel = new FilterModel();
 
 const boardPresenter = new BoardPresenter({
@@ -36,12 +36,14 @@ const loadingView = new LoadingView();
 
 render(loadingView, siteMainElement);
 
-eventsApiService.points
-  .then((data) => {
-    boardModel.events = data;
-    loadingView.removeElement();
-    boardPresenter.init();
-  })
+Promise.all([
+  boardModel.loadDestinations(),
+  boardModel.loadOffers(),
+  boardModel.loadEvents(),
+]).then(() => {
+  loadingView.removeElement();
+  boardPresenter.init();
+})
   .catch(() => {
     loadingView.removeElement();
     const errorView = new FailedLoadView();

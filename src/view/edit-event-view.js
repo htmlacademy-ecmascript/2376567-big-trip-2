@@ -7,6 +7,22 @@ import 'flatpickr/dist/flatpickr.min.css';
 
 const DATE_FORMAT = 'DD/MM/YY HH:mm';
 
+function createOffersTemplate(offers) {
+  return offers.map((offer) => `
+  <div class="event__offer-selector">
+    <input class="event__offer-checkbox visually-hidden"
+           id="event-offer-${offer.id}"
+           type="checkbox"
+           name="event-offer-${offer.id}">
+    <label class="event__offer-label" for="event-offer-${offer.id}">
+      <span class="event__offer-title">${offer.title}</span>
+      &plus;&euro;&nbsp;
+      <span class="event__offer-price">${offer.price}</span>
+    </label>
+  </div>
+`).join('');
+}
+
 function createEditEventTemplate(state) {
   const { type, basePrice, dateFrom, offersId, offers, description, pictures, destinationName } = state;
 
@@ -134,7 +150,8 @@ export default class EditEventView extends AbstractStatefulView {
       offers: offers.find((offersItem) => offersItem.type === event.type)?.offers || [],
       description: destinations.find((destinationItem) => destinationItem.id === event.destination)?.description || '',
       pictures: destinations.find((destinationItem) => destinationItem.id === event.destination)?.pictures || [],
-      destinationName: destination?.name || ''
+      destinationName: destination?.name || '',
+      currentDestination: destination,
     });
     this._escKeyDownHandler = this._escKeyDownHandler.bind(this);
     this._restoreHandlers();
@@ -145,37 +162,65 @@ export default class EditEventView extends AbstractStatefulView {
   }
 
   _setDatepicker() {
+
+    if (this.#datepickerStart) {
+      this.#datepickerStart.destroy();
+    }
+    if (this.#datepickerEnd) {
+      this.#datepickerEnd.destroy();
+    }
+
     this.#datepickerStart = flatpickr(
-      this.element.querySelector('#event-start-time-1'), {
+      this.element.querySelector('#event-start-time-1'),
+      {
         enableTime: true,
         dateFormat: 'd/m/y H:i',
         defaultDate: this._state.dateFrom,
-        onChange: this._changeStartDateHandler
+        onChange: this._changeStartDateHandler,
+        onClose: () => {
+        }
       }
     );
 
     this.#datepickerEnd = flatpickr(
-      this.element.querySelector('#event-end-time-1'), {
+      this.element.querySelector('#event-end-time-1'),
+      {
         enableTime: true,
         dateFormat: 'd/m/y H:i',
         defaultDate: this._state.dateTo,
         minDate: this._state.dateFrom,
-        onChange: this._changeEndDateHandler
+        onChange: this._changeEndDateHandler,
+        onClose: () => {
+        }
       }
     );
   }
 
   _changeStartDateHandler = ([userDate]) => {
-    this.updateElement({
-      dateFrom: userDate,
-    });
-    this.#datepickerEnd.set('minDate', userDate);
+    // Закрываем datepicker
+    if (this.#datepickerStart) {
+      this.#datepickerStart.close();
+    }
+
+    this._setState({
+      dateFrom: userDate
+    }, false); // false - не перерисовывать весь компонент
+
+    // Обновляем минимальную дату для конечного datepicker
+    if (this.#datepickerEnd) {
+      this.#datepickerEnd.set('minDate', userDate);
+    }
   };
 
+
   _changeEndDateHandler = ([userDate]) => {
-    this.updateElement({
-      dateTo: userDate,
-    });
+    if (this.#datepickerEnd) {
+      this.#datepickerEnd.close();
+    }
+
+    this._setState({
+      dateTo: userDate
+    }, false);
   };
 
   _restoreHandlers() {
@@ -186,12 +231,27 @@ export default class EditEventView extends AbstractStatefulView {
     this.setCloseButtonClickHandler(this._callback.closeButtonClick);
     this.setRollupButtonClickHandler(this._callback.rollupButtonClick);
     this._setDatepicker();
+    const destinationInput = this.element.querySelector('.event__input--destination');
+    if (destinationInput) {
+      let timeout;
+      destinationInput.addEventListener('input', (evt) => {
+        clearTimeout(timeout);
+        timeout = setTimeout(() => {
+          this._destinationInputHandler(evt);
+        }, 300);
+      });
+    }
   }
 
   setTypeChangeHandler() {
     const typeList = this.element.querySelector('.event__type-list');
     if (typeList) {
-      typeList.addEventListener('change', this._typeChangeHandler.bind(this));
+      typeList.addEventListener('change', (evt) => {
+        if (evt.target.tagName === 'INPUT') {
+          this._typeChangeHandler(evt);
+          this._closeTypeDropdown();
+        }
+      });
     }
   }
 
@@ -204,25 +264,81 @@ export default class EditEventView extends AbstractStatefulView {
 
   _typeChangeHandler(evt) {
     const newType = evt.target.value;
-    const newOffers = this.#offers.find((offersItem) => offersItem.type === newType)?.offers || [];
+    const newOffers = this.#offers.find((offer) => offer.type === newType)?.offers || [];
 
-    this.updateElement({
+    this._closeTypeDropdown();
+
+    this._setState({
       type: newType,
       offersId: [],
       offers: newOffers
-    });
+    }, false);
+
+    this._updateOffersSection(newOffers);
+    this._updateTypeIcon(newType);
+    this._updateTypeOutput(newType);
+  }
+
+  _updateTypeOutput(type) {
+    const typeOutput = this.element.querySelector('.event__type-output');
+    if (typeOutput) {
+      typeOutput.textContent = type;
+    }
+  }
+
+  _closeTypeDropdown() {
+    const typeToggle = this.element.querySelector('.event__type-toggle');
+    if (typeToggle) {
+      typeToggle.checked = false;
+    }
   }
 
   _destinationInputHandler(evt) {
     const destinationName = evt.target.value;
-    const selectedDestination = this.#destinations.find((dest) => dest.name === destinationName);
+
+    // Сбрасываем состояние если поле пустое
+    if (!destinationName.trim()) {
+      this._updateDestinationDetails({
+        description: '',
+        pictures: []
+      });
+      return;
+    }
+
+    const selectedDestination = this.#destinations.find((dest) =>
+      dest.name.toLowerCase().includes(destinationName.toLowerCase())
+    );
 
     if (selectedDestination) {
-      this.updateElement({
+      this._updateDestinationDetails(selectedDestination);
+      this._setState({
         destinationName: selectedDestination.name,
+        destination: selectedDestination.id,
         description: selectedDestination.description,
         pictures: selectedDestination.pictures
-      });
+      }, false);
+    }
+  }
+
+  _updateDestinationDetails(destination) {
+    // Обновляем описание
+    const descriptionElement = this.element.querySelector('.event__destination-description');
+    if (descriptionElement) {
+      descriptionElement.textContent = destination.description || '';
+    }
+
+    // Обновляем фотографии
+    const photosContainer = this.element.querySelector('.event__photos-tape');
+    if (photosContainer) {
+      photosContainer.innerHTML = destination.pictures ? destination.pictures.map((photo) => `
+        <img class="event__photo" src="${photo.src}" alt="${photo.description}">
+      `).join('') : '';
+    }
+
+    // Обновляем видимость секции
+    const destinationSection = this.element.querySelector('.event__section--destination');
+    if (destinationSection) {
+      destinationSection.style.display = destination.description ? 'block' : 'none';
     }
   }
 
@@ -286,5 +402,51 @@ export default class EditEventView extends AbstractStatefulView {
       this.#datepickerEnd.destroy();
       this.#datepickerEnd = null;
     }
+  }
+
+  _updateOffersSection(offers) {
+    const offersContainer = this.element.querySelector('.event__available-offers');
+    if (offersContainer) {
+      offersContainer.innerHTML = this._returnOffersTemplate(offers);
+    }
+  }
+
+  _updateTypeIcon(type) {
+    const icon = this.element.querySelector('.event__type-icon');
+    if (icon) {
+      icon.src = `img/icons/${type}.png`;
+    }
+  }
+
+  _returnOffersTemplate(offers) {
+    return createOffersTemplate(offers);
+  }
+
+  showError(message) {
+    // Удаляем предыдущие сообщения об ошибке
+    const existingError = this.element.querySelector('.event__error');
+    if (existingError) {
+      existingError.remove();
+    }
+
+    // Создаем элемент ошибки
+    const errorElement = document.createElement('div');
+    errorElement.className = 'event__error';
+    errorElement.style.color = 'red';
+    errorElement.style.marginTop = '10px';
+    errorElement.textContent = message;
+
+    // Добавляем перед кнопками
+    const header = this.element.querySelector('.event__header');
+    if (header) {
+      header.appendChild(errorElement);
+    }
+  }
+
+  shake() {
+    this.element.style.animation = 'shake 0.5s';
+    setTimeout(() => {
+      this.element.style.animation = '';
+    }, 500);
   }
 }

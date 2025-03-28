@@ -1,21 +1,15 @@
-import { getRandomEvent, getOffers, getDestination } from '../mock/event';
 import Observable from '../framework/observable.js';
 import { USER_ACTIONS } from '../const.js';
 
 export default class BoardModel extends Observable {
   #events = [];
-  #allOffers = getOffers();
-  #allDestinations = getDestination();
-  EVENT_QTY = 5;
+  #allOffers = [];
+  #allDestinations = [];
   #currentSortType = 'day';
 
-  constructor() {
+  constructor({ eventsApiService }) {
     super();
-
-    for (let i = 0; i < this.EVENT_QTY; i++) {
-      const id = i + 1;
-      this.#events.push(getRandomEvent(id));
-    }
+    this.eventsApiService = eventsApiService;
   }
 
   set events(events) {
@@ -35,9 +29,24 @@ export default class BoardModel extends Observable {
     return this.#allDestinations;
   }
 
+  async loadEvents() {
+    const events = await this.eventsApiService.points;
+    this.#events = events;
+    this._notify('EVENTS_LOADED', events);
+  }
+
+  async loadOffers() {
+    const offers = await this.eventsApiService.getOffers();
+    this.#allOffers = offers;
+  }
+
+  async loadDestinations() {
+    const destinations = await this.eventsApiService.getDestinations();
+    this.#allDestinations = destinations;
+  }
+
   getDestinationsById(id) {
-    const allDestinations = this.destinations;
-    return allDestinations.find((item) => item.id === id);
+    return this.destinations.find((item) => item.id === id);
   }
 
   getOffersByType(type) {
@@ -54,14 +63,21 @@ export default class BoardModel extends Observable {
     this._notify(USER_ACTIONS.ADD_EVENT, event);
   }
 
-  updateEvent(event) {
-    const index = this.#events.findIndex((e) => e.id === event.id);
-    this.#events = [
-      ...this.#events.slice(0, index),
-      event,
-      ...this.#events.slice(index + 1),
-    ];
-    this._notify(USER_ACTIONS.UPDATE_EVENT, event);
+  async updateEvent(event) {
+    try {
+      const updatedEvent = await this.eventsApiService.updatePoint(event);
+      const index = this.#events.findIndex((e) => e.id === updatedEvent.id);
+      this.#events = [
+        ...this.#events.slice(0, index),
+        updatedEvent,
+        ...this.#events.slice(index + 1),
+      ];
+      this._notify(USER_ACTIONS.UPDATE_EVENT, updatedEvent);
+      return updatedEvent;
+    } catch (err) {
+      console.error('Ошибка при обновлении точки маршрута:', err);
+      throw err;
+    }
   }
 
   deleteEvent(eventId) {
@@ -81,10 +97,4 @@ export default class BoardModel extends Observable {
   getCurrentSortType() {
     return this.#currentSortType;
   }
-
-  // setEvents(events) {
-  //   this.#events = events;
-  //   this._notify('EVENTS_LOADED', events);
-  // }
-
 }
