@@ -1,3 +1,4 @@
+/* eslint-disable camelcase */
 import ApiService from '../framework/api-service';
 import { convertDateToISO } from '../utils';
 
@@ -48,19 +49,6 @@ export default class EventsApiService extends ApiService {
     return this.#adaptToClient(parsedResponse);
   }
 
-  // async updatePoint(point) {
-  //   const response = await this._load({
-  //     url: `points/${point.id}`,
-  //     method: Method.PUT,
-  //     body: JSON.stringify(this.#adaptToServer(point)),
-  //     headers: new Headers({ 'Content-Type': 'application/json' }),
-  //   });
-
-  //   const parsedResponse = await ApiService.parseResponse(response);
-
-  //   return this.#adaptToClient(parsedResponse);
-  // }
-
   async deletePoint(pointId) {
     const response = await this._load({
       url: `points/${pointId}`,
@@ -95,7 +83,6 @@ export default class EventsApiService extends ApiService {
       type: point.type
     };
 
-    // Удаляем серверные поля
     delete adaptedPoint.base_price;
     delete adaptedPoint.date_from;
     delete adaptedPoint.date_to;
@@ -116,17 +103,18 @@ export default class EventsApiService extends ApiService {
       return null;
     }
 
-    // Приводим оба ID к строке для сравнения
     const searchId = String(id).toLowerCase();
 
     return destinations.find((dest) => {
-      if (!dest?.id) {return false;}
+      if (!dest?.id) {
+        return false;
+      }
       return String(dest.id).toLowerCase() === searchId;
     });
   }
 
   #adaptToServer(point) {
-    // Получаем полный объект destination по ID
+
     const destinationObj = this.getDestinationById(point.destination);
 
     const adaptedPoint = {
@@ -134,13 +122,12 @@ export default class EventsApiService extends ApiService {
       base_price: point.basePrice,
       date_from: convertDateToISO(point.dateFrom),
       date_to: convertDateToISO(point.dateTo),
-      destination: destinationObj?.id || point.destination, // Используем UUID
+      destination: destinationObj?.id || point.destination,
       is_favorite: point.favorite,
       offers: point.offersId,
       type: point.type
     };
 
-    // Удаляем клиентские поля
     delete adaptedPoint.basePrice;
     delete adaptedPoint.dateFrom;
     delete adaptedPoint.dateTo;
