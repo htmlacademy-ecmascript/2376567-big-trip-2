@@ -14,7 +14,7 @@ export default class BoardModel extends Observable {
 
   set events(events) {
     this.#events = events;
-    this._notify('EVENTS_LOADED', events);
+    this._notify(USER_ACTIONS.EVENTS_LOADED, events);
   }
 
   get events() {
@@ -32,7 +32,7 @@ export default class BoardModel extends Observable {
   async loadEvents() {
     const events = await this.eventsApiService.points;
     this.#events = events;
-    this._notify('EVENTS_LOADED', events);
+    this._notify(USER_ACTIONS.EVENTS_LOADED, events);
   }
 
   async loadOffers() {
@@ -75,7 +75,7 @@ export default class BoardModel extends Observable {
       this._notify(USER_ACTIONS.UPDATE_EVENT, updatedEvent);
       return updatedEvent;
     } catch (err) {
-      console.error('Ошибка при обновлении точки маршрута:', err);
+      console.log('Ошибка при обновлении точки маршрута:', err);
       throw err;
     }
   }
@@ -91,7 +91,7 @@ export default class BoardModel extends Observable {
 
   changeSortType(sortType) {
     this.#currentSortType = sortType;
-    this._notify('SORT_CHANGED', sortType);
+    this._notify(USER_ACTIONS.SORT_CHANGED, sortType);
   }
 
   getCurrentSortType() {

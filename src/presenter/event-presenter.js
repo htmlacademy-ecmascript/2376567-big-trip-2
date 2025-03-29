@@ -2,6 +2,7 @@ import EventView from '../view/event-view.js';
 import EditEventView from '../view/edit-event-view.js';
 import { replace } from '../framework/render.js';
 import { convertDateToISO } from '../utils.js';
+import { USER_ACTIONS } from '../const.js';
 
 export default class EventPresenter {
   #event = null;
@@ -50,7 +51,12 @@ export default class EventPresenter {
 
   resetView() {
     if (this.#editEventView) {
-      this._replaceFormWithEvent();
+      const parent = this.#editEventView.element.parentElement;
+      if (parent) {
+        parent.replaceChild(this.#eventView.element, this.#editEventView.element);
+      }
+      this.#editEventView.removeElement();
+      this.#editEventView = null;
     }
   }
 
@@ -89,20 +95,17 @@ export default class EventPresenter {
   }
 
   _deleteFormEvent() {
-    this.#onUserAction('DELETE_EVENT', this.#event.id);
+    this.#onUserAction(USER_ACTIONS.DELETE_EVENT, this.#event.id);
   }
 
   _handleFormSubmit() {
     const formData = new FormData(this.#editEventView.element);
     const destinationName = formData.get('event-destination');
 
-    // Находим полный объект destination по имени
     const destination = this.#destinationAll.find((dest) => dest.name === destinationName);
 
-    // Валидация назначения
     if (!destination) {
       this.#editEventView.shake();
-      // this.#editEventView.showError('Please select a valid destination from the list');
       return;
     }
 
@@ -115,7 +118,7 @@ export default class EventPresenter {
       dateFrom: convertDateToISO(dateFromString),
       dateTo: convertDateToISO(dateToString),
       basePrice: Number(formData.get('event-price')),
-      destination: destination.id, // Используем UUID из найденного объекта
+      destination: destination.id,
       offersId: Array.from(this.#editEventView.element.querySelectorAll('.event__offer-checkbox:checked'))
         .map((input) => Number(input.value)),
       favorite: this.#event.favorite,
@@ -126,8 +129,7 @@ export default class EventPresenter {
         this._replaceFormWithEvent();
       })
       .catch((err) => {
-        console.error('Failed to save event:', err);
-        this.#editEventView.showError('Failed to save changes. Please try again.');
+        console.log('Ошибка onDataChange:', err);
       });
   }
 }

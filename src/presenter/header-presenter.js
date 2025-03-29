@@ -2,6 +2,7 @@ import { render } from '../framework/render.js';
 import TripMainView from '../view/trip-main-veiw.js';
 import FiltersPresenter from './filters-presenter.js';
 import AddEventView from '../view/add-event-view.js';
+import { USER_ACTIONS } from '../const.js';
 
 export default class HeaderPresenter {
   #filterModel = null;
@@ -67,7 +68,6 @@ export default class HeaderPresenter {
 
     this.#boardPresenter.showAddEventForm(this.#newAddEventView);
     this.#isFormOpen = true;
-
     this.#tripMainView.blockNewEventButton();
   }
 
@@ -98,7 +98,7 @@ export default class HeaderPresenter {
   }
 
   _handleSortChange(event) {
-    if (event === 'SORT_CHANGED' && this.#isFormOpen) {
+    if (event === USER_ACTIONS.SORT_CHANGED && this.#isFormOpen) {
       this._closeForm();
     }
   }

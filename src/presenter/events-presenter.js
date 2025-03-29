@@ -109,6 +109,7 @@ export default class EventsPresenter {
   }
 
   resetAllViews() {
+    console.log('resetAllViews');
     this.#eventPresenters.forEach((presenter) => presenter.resetView());
   }
 }

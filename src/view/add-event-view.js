@@ -8,12 +8,27 @@ import { convertDateToISO } from '../utils';
 
 const DATE_FORMAT = 'DD/MM/YY HH:mm';
 
-function createAddEventTemplate(state) {
-  const { type, basePrice, dateFrom, dateTo, offersId, offers, description, pictures, destinationName } = state;
+const createOffersTemplate = (offers, selectedOffers = []) => offers.map((offer) => `
+  <div class="event__offer-selector">
+    <input class="event__offer-checkbox visually-hidden"
+           id="event-offer-${offer.id}"
+           type="checkbox"
+           name="event-offer-${offer.id}"
+           value="${offer.id}"
+           ${selectedOffers.includes(offer.id) ? 'checked' : ''}>
+    <label class="event__offer-label" for="event-offer-${offer.id}">
+      <span class="event__offer-title">${offer.title}</span>
+      &plus;&euro;&nbsp;
+      <span class="event__offer-price">${offer.price}</span>
+    </label>
+  </div>
+`).join('');
 
-  const currentDestination = destinationName || '';
-  const currentOffers = offers || [];
-  const currentPictures = pictures || [];
+const createAddEventTemplate = (state) => {
+  const { type, basePrice, dateFrom, dateTo, offersId = [], offers = [],
+    description = '', pictures = [], destinationName = '' } = state;
+
+  const renderSectionIf = (condition, content) => condition ? content : '';
 
   return `
     <form class="event event--edit" action="#" method="post">
@@ -43,7 +58,7 @@ function createAddEventTemplate(state) {
         <div class="event__field-group event__field-group--destination">
           <label class="event__label event__type-output" for="event-destination-1">${type}</label>
           <input class="event__input event__input--destination" id="event-destination-1"
-                 type="text" name="event-destination" value="${currentDestination}" placeholder=""
+                 type="text" name="event-destination" value="${destinationName}"
                  list="destination-list-1">
           <datalist id="destination-list-1">
             ${DESTINATIONS.map((dest) => `<option value="${dest}"></option>`).join('')}
@@ -75,45 +90,32 @@ function createAddEventTemplate(state) {
       </header>
 
       <section class="event__details">
-        ${currentOffers.length ? `
+        ${renderSectionIf(offers.length, `
           <section class="event__section event__section--offers">
             <h3 class="event__section-title event__section-title--offers">Offers</h3>
             <div class="event__available-offers">
-              ${currentOffers.map((offer) => `
-                <div class="event__offer-selector">
-                  <input class="event__offer-checkbox visually-hidden"
-                         id="event-offer-${offer.id}"
-                         type="checkbox"
-                         name="event-offer-${offer.id}"
-                         ${offersId.includes(offer.id) ? 'checked' : ''}>
-                  <label class="event__offer-label" for="event-offer-${offer.id}">
-                    <span class="event__offer-title">${offer.title}</span>
-                    &plus;&euro;&nbsp;
-                    <span class="event__offer-price">${offer.price}</span>
-                  </label>
-                </div>
-              `).join('')}
+              ${createOffersTemplate(offers, offersId)}
             </div>
           </section>
-        ` : ''}
+        `)}
 
         <section class="event__section event__section--destination">
           <h3 class="event__section-title event__section-title--destination">Destination</h3>
-          <p class="event__destination-description">${description || ''}</p>
-          ${currentPictures.length ? `
+          <p class="event__destination-description">${description}</p>
+          ${renderSectionIf(pictures.length, `
             <div class="event__photos-container">
               <div class="event__photos-tape">
-                ${currentPictures.map((photo) => `
+                ${pictures.map((photo) => `
                   <img class="event__photo" src="${photo.src}" alt="${photo.description}">
                 `).join('')}
               </div>
             </div>
-          ` : ''}
+          `)}
         </section>
       </section>
     </form>
   `;
-}
+};
 
 export default class AddEventView extends AbstractStatefulView {
   #destinations = null;
@@ -135,7 +137,6 @@ export default class AddEventView extends AbstractStatefulView {
       destinationName: destination?.name || ''
     });
 
-    this._escKeyDownHandler = this._escKeyDownHandler.bind(this);
     this._restoreHandlers();
   }
 
@@ -143,13 +144,78 @@ export default class AddEventView extends AbstractStatefulView {
     return createAddEventTemplate(this._state);
   }
 
+  _restoreHandlers() {
+    this._setTypeChangeHandler();
+    this._setDestinationChangeHandler();
+    this._setFormSubmitHandler();
+    this._setDatepicker();
+    this._setDocumentHandlers();
+  }
+
+  _setTypeChangeHandler() {
+    this._addConditionalListener('.event__type-list', 'change',
+      (evt) => evt.target.tagName === 'INPUT',
+      (evt) => {
+        const newType = evt.target.value;
+        const newOffers = this.#offers.find((o) => o.type === newType)?.offers || [];
+
+        this._setState({
+          type: newType,
+          offersId: [],
+          offers: newOffers
+        });
+
+        this._updateElementText('.event__type-output', newType);
+        this._updateElementAttribute('.event__type-icon', 'src', `img/icons/${newType}.png`);
+        this._closeTypeDropdown();
+      }
+    );
+  }
+
+  _setDestinationChangeHandler() {
+    const destinationInput = this.element.querySelector('.event__input--destination');
+    if (destinationInput) {
+      destinationInput.addEventListener('input', (evt) => {
+        this._handleDestinationInput(evt.target.value);
+      });
+    }
+  }
+
+  _handleDestinationInput(destinationName) {
+    if (!destinationName.trim()) {
+      return this._updateDestinationDetails({ description: '', pictures: [] });
+    }
+
+    const selectedDestination = this.#destinations.find((d) =>
+      d.name.toLowerCase().includes(destinationName.toLowerCase())
+    );
+
+    if (selectedDestination) {
+      this._updateDestinationDetails(selectedDestination);
+      this._setState({
+        destinationName: selectedDestination.name,
+        destination: selectedDestination.id,
+        description: selectedDestination.description,
+        pictures: selectedDestination.pictures
+      });
+      this._hideError();
+    }
+  }
+
+  _updateDestinationDetails(destination) {
+    this._updateElementText('.event__destination-description', destination.description || '');
+    this._updateElementHTML(
+      '.event__photos-tape',
+      destination.pictures?.map((p) => `<img class="event__photo" src="${p.src}" alt="${p.description}">`).join('') || ''
+    );
+    this._toggleElementVisibility(
+      '.event__section--destination',
+      !!destination.description || !!destination.pictures?.length
+    );
+  }
+
   _setDatepicker() {
-    if (this.#datepickerStart) {
-      this.#datepickerStart.destroy();
-    }
-    if (this.#datepickerEnd) {
-      this.#datepickerEnd.destroy();
-    }
+    this._destroyDatepickers();
 
     this.#datepickerStart = flatpickr(
       this.element.querySelector('#event-start-time-1'),
@@ -157,8 +223,11 @@ export default class AddEventView extends AbstractStatefulView {
         enableTime: true,
         dateFormat: 'd/m/y H:i',
         defaultDate: this._state.dateFrom,
-        onChange: this._changeStartDateHandler,
-        onClose: () => this._updateFormLayout()
+        onChange: (selectedDates) => {
+          this.#datepickerStart?.close();
+          this._setState({ dateFrom: selectedDates[0] });
+          this.#datepickerEnd?.set('minDate', selectedDates[0]);
+        }
       }
     );
 
@@ -169,210 +238,95 @@ export default class AddEventView extends AbstractStatefulView {
         dateFormat: 'd/m/y H:i',
         defaultDate: this._state.dateTo,
         minDate: this._state.dateFrom,
-        onChange: this._changeEndDateHandler,
-        onClose: () => this._updateFormLayout()
+        onChange: (selectedDates) => {
+          this.#datepickerEnd?.close();
+          this._setState({ dateTo: selectedDates[0] });
+        }
       }
     );
   }
 
-  _changeStartDateHandler = (selectedDates, dateStr, instance) => {
-    const oldDate = this._state.dateFrom;
-    const newDate = selectedDates[0];
-    const dateChanged = !this._isSameDate(oldDate, newDate);
-
-    if (dateChanged) {
-      instance.close();
-    }
-
-    this._setState({
-      dateFrom: newDate
-    }, false);
-
-    if (this.#datepickerEnd) {
-      this.#datepickerEnd.set('minDate', newDate);
-    }
-  };
-
-  _changeEndDateHandler = (selectedDates, dateStr, instance) => {
-    const oldDate = this._state.dateTo;
-    const newDate = selectedDates[0];
-    const dateChanged = !this._isSameDate(oldDate, newDate);
-
-    if (dateChanged) {
-      instance.close();
-    }
-
-    this._setState({
-      dateTo: newDate
-    }, false);
-  };
-
-  _isSameDate = (date1, date2) => {
-    if (!date1 || !date2) {
-      return false;
-    }
-    const d1 = new Date(date1);
-    const d2 = new Date(date2);
-    return (
-      d1.getFullYear() === d2.getFullYear() &&
-      d1.getMonth() === d2.getMonth() &&
-      d1.getDate() === d2.getDate()
-    );
-  };
-
-  _restoreHandlers() {
-    this.setTypeChangeHandler();
-    this.setDestinationChangeHandler();
-    this.setFormSubmitHandler(this._callback.formSubmit);
-    this.setEscKeyDownHandler(this._callback.escKeyDown);
-    this.setCancelClickHandler(this._callback.closeButtonClick);
-    this._setDatepicker();
-
-    // Закрытие datepicker при клике вне
+  _setDocumentHandlers() {
     document.addEventListener('click', (evt) => {
       if (!this.element.contains(evt.target)) {
-        this.closeDatepickers();
+        this._closeDatepickers();
       }
     });
 
-    // Закрытие по Escape
     document.addEventListener('keydown', (evt) => {
       if (evt.key === 'Escape') {
-        this.closeDatepickers();
+        this._closeDatepickers();
       }
     });
   }
 
-  closeDatepickers() {
-    if (this.#datepickerStart) {
-      this.#datepickerStart.close();
-    }
-    if (this.#datepickerEnd) {
-      this.#datepickerEnd.close();
-    }
+  _closeDatepickers() {
+    [this.#datepickerStart, this.#datepickerEnd].forEach((picker) => picker?.close());
   }
 
-  _updateFormLayout() {
-    // Дополнительные обновления layout при необходимости
+  _destroyDatepickers() {
+    [this.#datepickerStart, this.#datepickerEnd].forEach((picker) => picker?.destroy());
   }
 
-  setTypeChangeHandler() {
-    const typeList = this.element.querySelector('.event__type-list');
-    if (typeList) {
-      typeList.addEventListener('change', (evt) => {
-        if (evt.target.tagName === 'INPUT') {
-          this._typeChangeHandler(evt);
-          this._closeTypeDropdown();
-        }
-      });
-    }
+  _setFormSubmitHandler() {
+    this.element.addEventListener('submit', (evt) => {
+      evt.preventDefault();
+      this._handleFormSubmit();
+    });
   }
 
-  _typeChangeHandler(evt) {
-    const newType = evt.target.value;
-    const newOffers = this.#offers.find((offer) => offer.type === newType)?.offers || [];
+  _handleFormSubmit() {
+    const formData = new FormData(this.element);
+    const destinationName = formData.get('event-destination');
+    const destination = this.#destinations.find((d) => d.name === destinationName);
 
-    this._closeTypeDropdown();
-
-    this._setState({
-      type: newType,
-      offersId: [],
-      offers: newOffers
-    }, false);
-
-    this._updateOffersSection(newOffers);
-    this._updateTypeIcon(newType);
-    this._updateTypeOutput(newType);
-  }
-
-  _closeTypeDropdown() {
-    const typeToggle = this.element.querySelector('.event__type-toggle');
-    if (typeToggle) {
-      typeToggle.checked = false;
-    }
-  }
-
-  _updateTypeOutput(type) {
-    const typeOutput = this.element.querySelector('.event__type-output');
-    if (typeOutput) {
-      typeOutput.textContent = type;
-    }
-  }
-
-  setDestinationChangeHandler() {
-    const destinationInput = this.element.querySelector('.event__input--destination');
-    if (destinationInput) {
-      destinationInput.addEventListener('input', (evt) => {
-        this._destinationInputHandler(evt);
-      });
-    }
-  }
-
-  _destinationInputHandler(evt) {
-    const destinationName = evt.target.value;
-
-    // Сбрасываем состояние если поле пустое
-    if (!destinationName.trim()) {
-      this._updateDestinationDetails({
-        description: '',
-        pictures: []
-      });
+    if (!destination) {
+      this.shake();
       return;
     }
 
-    const selectedDestination = this.#destinations.find((dest) =>
-      dest.name.toLowerCase().includes(destinationName.toLowerCase())
-    );
+    const newEvent = {
+      id: nanoid(),
+      basePrice: Number(formData.get('event-price')),
+      dateFrom: convertDateToISO(formData.get('event-start-time')),
+      dateTo: convertDateToISO(formData.get('event-end-time')),
+      destination: destination.id,
+      favorite: false,
+      type: formData.get('event-type'),
+      offersId: Array.from(this.element.querySelectorAll('.event__offer-checkbox:checked'))
+        .map((input) => input.value),
+    };
 
-    if (selectedDestination) {
-      this._updateDestinationDetails(selectedDestination);
-      this._setState({
-        destinationName: selectedDestination.name,
-        destination: selectedDestination.id,
-        description: selectedDestination.description,
-        pictures: selectedDestination.pictures
-      }, false);
-      this.hideError();
-    } else {
-      // this.showError('Please select a destination from the list');
+    this._callback.formSubmit?.(newEvent);
+  }
+
+  setFormSubmitHandler(callback) {
+    this._callback.formSubmit = callback;
+  }
+
+  setEscKeyDownHandler(callback) {
+    this._callback.escKeyDown = callback;
+    document.addEventListener('keydown', (evt) => {
+      if (evt.key === 'Escape' || evt.key === 'Esc') {
+        evt.preventDefault();
+        this._callback.escKeyDown?.();
+      }
+    });
+  }
+
+  setCancelClickHandler(callback) {
+    this._callback.closeButtonClick = callback;
+    const button = this.element.querySelector('.event__reset-btn');
+    if (button) {
+      button.addEventListener('click', (evt) => {
+        evt.preventDefault();
+        this._callback.closeButtonClick?.();
+      });
     }
   }
 
-  _updateDestinationDetails(destination) {
-    // Обновляем описание
-    const descriptionElement = this.element.querySelector('.event__destination-description');
-    if (descriptionElement) {
-      descriptionElement.textContent = destination.description || '';
-    }
-
-    // Обновляем фотографии
-    const photosContainer = this.element.querySelector('.event__photos-tape');
-    if (photosContainer) {
-      photosContainer.innerHTML = destination.pictures ? destination.pictures.map(photo => `
-        <img class="event__photo" src="${photo.src}" alt="${photo.description}">
-      `).join('') : '';
-    }
-
-    // Обновляем видимость секции
-    const destinationSection = this.element.querySelector('.event__section--destination');
-    if (destinationSection) {
-      destinationSection.style.display = destination.description || destination.pictures?.length ? 'block' : 'none';
-    }
-  }
-
-  showError(message) {
-    const errorElement = this.element.querySelector('.event__error');
-    if (errorElement) {
-      errorElement.textContent = message;
-      errorElement.style.display = 'block';
-    }
-  }
-
-  hideError() {
-    const errorElement = this.element.querySelector('.event__error');
-    if (errorElement) {
-      errorElement.style.display = 'none';
-    }
+  _hideError() {
+    this._updateElementStyle('.event__error', 'display', 'none');
   }
 
   shake() {
@@ -382,106 +336,57 @@ export default class AddEventView extends AbstractStatefulView {
     }, 500);
   }
 
-  _updateOffersSection(offers) {
-    const offersContainer = this.element.querySelector('.event__available-offers');
-    if (offersContainer) {
-      offersContainer.innerHTML = this._createOffersTemplate(offers);
+  _closeTypeDropdown() {
+    const typeToggle = this.element.querySelector('.event__type-toggle');
+    if (typeToggle) {
+      typeToggle.checked = false;
     }
   }
 
-  _updateTypeIcon(type) {
-    const icon = this.element.querySelector('.event__type-icon');
-    if (icon) {
-      icon.src = `img/icons/${type}.png`;
+  _addConditionalListener(selector, event, condition, handler) {
+    const element = this.element.querySelector(selector);
+    if (element) {
+      element.addEventListener(event, (evt) => condition(evt) && handler(evt));
     }
   }
 
-  _createOffersTemplate(offers) {
-    return offers.map((offer) => `
-      <div class="event__offer-selector">
-        <input class="event__offer-checkbox visually-hidden"
-               id="event-offer-${offer.id}"
-               type="checkbox"
-               name="event-offer-${offer.id}">
-        <label class="event__offer-label" for="event-offer-${offer.id}">
-          <span class="event__offer-title">${offer.title}</span>
-          &plus;&euro;&nbsp;
-          <span class="event__offer-price">${offer.price}</span>
-        </label>
-      </div>
-    `).join('');
-  }
-
-  setFormSubmitHandler(callback) {
-    this._callback.formSubmit = callback;
-    this.element.addEventListener('submit', this._formSubmitHandler);
-  }
-
-  _formSubmitHandler = (evt) => {
-    evt.preventDefault();
-
-    const formData = new FormData(this.element);
-    const destinationName = formData.get('event-destination');
-    const destination = this.#destinations.find(d => d.name === destinationName);
-
-    if (!destination) {
-      this.shake();
-      // this.showError('Please select a valid destination from the list');
-      return;
+  _updateElementText(selector, text) {
+    const element = this.element.querySelector(selector);
+    if (element) {
+      element.textContent = text;
     }
-
-    const dateFromString = formData.get('event-start-time');
-    const dateToString = formData.get('event-end-time');
-
-    const newEvent = {
-      id: nanoid(),
-      basePrice: Number(formData.get('event-price')),
-      dateFrom: convertDateToISO(dateFromString),
-      dateTo: convertDateToISO(dateToString),
-      destination: destination.id,
-      favorite: false,
-      type: formData.get('event-type'),
-      offersId: Array.from(this.element.querySelectorAll('.event__offer-checkbox:checked'))
-        .map((input) => input.value),
-    };
-
-    this._callback.formSubmit(newEvent);
-  };
-
-  setEscKeyDownHandler(callback) {
-    this._callback.escKeyDown = callback;
-    document.addEventListener('keydown', this._escKeyDownHandler);
   }
 
-  _escKeyDownHandler = (evt) => {
-    if (evt.key === 'Escape' || evt.key === 'Esc') {
-      evt.preventDefault();
-      this._callback.escKeyDown();
+  _updateElementAttribute(selector, attr, value) {
+    const element = this.element.querySelector(selector);
+    if (element) {
+      element[attr] = value;
     }
-  };
-
-  setCancelClickHandler(callback) {
-    this._callback.closeButtonClick = callback;
-    const resetButton = this.element.querySelector('.event__reset-btn');
-    resetButton.addEventListener('click', this._closeButtonClickHandler);
   }
 
-  _closeButtonClickHandler = (evt) => {
-    evt.preventDefault();
-    this._callback.closeButtonClick();
-  };
+  _updateElementHTML(selector, html) {
+    const element = this.element.querySelector(selector);
+    if (element) {
+      element.innerHTML = html;
+    }
+  }
+
+  _updateElementStyle(selector, property, value) {
+    const element = this.element.querySelector(selector);
+    if (element) {
+      element.style[property] = value;
+    }
+  }
+
+  _toggleElementVisibility(selector, isVisible) {
+    const element = this.element.querySelector(selector);
+    if (element) {
+      element.style.display = isVisible ? 'block' : 'none';
+    }
+  }
 
   removeElement() {
     super.removeElement();
-
-    if (this.#datepickerStart) {
-      this.#datepickerStart.destroy();
-      this.#datepickerStart = null;
-    }
-
-    if (this.#datepickerEnd) {
-      this.#datepickerEnd.destroy();
-      this.#datepickerEnd = null;
-    }
+    this._destroyDatepickers();
   }
 }

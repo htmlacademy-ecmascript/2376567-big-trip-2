@@ -4,16 +4,15 @@ import AbstractStatefulView from '../framework/view/abstract-stateful-view.js';
 import flatpickr from 'flatpickr';
 import 'flatpickr/dist/flatpickr.min.css';
 
-
 const DATE_FORMAT = 'DD/MM/YY HH:mm';
 
-function createOffersTemplate(offers) {
-  return offers.map((offer) => `
+const createOffersTemplate = (offers, selectedOffers = []) => offers.map((offer) => `
   <div class="event__offer-selector">
     <input class="event__offer-checkbox visually-hidden"
            id="event-offer-${offer.id}"
            type="checkbox"
-           name="event-offer-${offer.id}">
+           name="event-offer-${offer.id}"
+           ${selectedOffers.includes(offer.id) ? 'checked' : ''}>
     <label class="event__offer-label" for="event-offer-${offer.id}">
       <span class="event__offer-title">${offer.title}</span>
       &plus;&euro;&nbsp;
@@ -21,19 +20,16 @@ function createOffersTemplate(offers) {
     </label>
   </div>
 `).join('');
-}
 
-function createEditEventTemplate(state) {
-  const { type, basePrice, dateFrom, offersId, offers, description, pictures, destinationName } = state;
+const createEditEventTemplate = (state) => {
+  const { type, basePrice, dateFrom, dateTo, offersId = [], offers = [],
+    description = '', pictures = [], destinationName = '' } = state;
 
-  const currentDestination = destinationName || {};
-  const currentOffers = offers || [];
-  const currentPictures = pictures || [];
+  const renderSectionIf = (condition, content) => condition ? content : '';
 
   return `
     <form class="event event--edit" action="#" method="post">
       <header class="event__header">
-
         <div class="event__type-wrapper">
           <label class="event__type event__type-btn" for="event-type-toggle-1">
             <span class="visually-hidden">Choose event type</span>
@@ -59,7 +55,7 @@ function createEditEventTemplate(state) {
         <div class="event__field-group event__field-group--destination">
           <label class="event__label event__type-output" for="event-destination-1">${type}</label>
           <input class="event__input event__input--destination" id="event-destination-1"
-                 type="text" name="event-destination" value="${currentDestination}" placeholder=""
+                 type="text" name="event-destination" value="${destinationName}"
                  list="destination-list-1">
           <datalist id="destination-list-1">
             ${DESTINATIONS.map((dest) => `<option value="${dest}"></option>`).join('')}
@@ -73,7 +69,7 @@ function createEditEventTemplate(state) {
           &mdash;
           <label class="visually-hidden" for="event-end-time-1">To</label>
           <input class="event__input event__input--time" id="event-end-time-1"
-                 type="text" name="event-end-time" value="${dayjs(dateFrom).format(DATE_FORMAT)}">
+                 type="text" name="event-end-time" value="${dayjs(dateTo).format(DATE_FORMAT)}">
         </div>
 
         <div class="event__field-group event__field-group--price">
@@ -88,51 +84,37 @@ function createEditEventTemplate(state) {
         <button class="event__save-btn btn btn--blue" type="submit">Save</button>
         <button class="event__reset-btn" type="reset">Delete</button>
         <button class="event__rollup-btn" type="button">
-                    <span class="visually-hidden">Open event</span>
-                  </button>
+          <span class="visually-hidden">Open event</span>
+        </button>
       </header>
 
       <section class="event__details">
-
-        ${currentOffers.length ? `
+        ${renderSectionIf(offers.length, `
           <section class="event__section event__section--offers">
             <h3 class="event__section-title event__section-title--offers">Offers</h3>
             <div class="event__available-offers">
-              ${currentOffers.map((offer) => `
-                <div class="event__offer-selector">
-                  <input class="event__offer-checkbox visually-hidden"
-                         id="event-offer-${offer.id}"
-                         type="checkbox"
-                         name="event-offer-${offer.id}"
-                         ${offersId.includes(offer.id) ? 'checked' : ''}>
-                  <label class="event__offer-label" for="event-offer-${offer.id}">
-                    <span class="event__offer-title">${offer.title}</span>
-                    &plus;&euro;&nbsp;
-                    <span class="event__offer-price">${offer.price}</span>
-                  </label>
-                </div>
-              `).join('')}
+              ${createOffersTemplate(offers, offersId)}
             </div>
           </section>
-        ` : ''}
+        `)}
 
         <section class="event__section event__section--destination">
           <h3 class="event__section-title event__section-title--destination">Destination</h3>
-          <p class="event__destination-description">${description || ''}</p>
-          ${currentPictures.length ? `
+          <p class="event__destination-description">${description}</p>
+          ${renderSectionIf(pictures.length, `
             <div class="event__photos-container">
               <div class="event__photos-tape">
-                ${currentPictures.map((photo) => `
+                ${pictures.map((photo) => `
                   <img class="event__photo" src="${photo.src}" alt="${photo.description}">
                 `).join('')}
               </div>
             </div>
-          ` : ''}
+          `)}
         </section>
       </section>
     </form>
   `;
-}
+};
 
 export default class EditEventView extends AbstractStatefulView {
   #destinations = null;
@@ -144,16 +126,17 @@ export default class EditEventView extends AbstractStatefulView {
     super();
     this.#destinations = destinations;
     this.#offers = offers;
+
     this._setState({
       ...event,
       destination: event.destination,
-      offers: offers.find((offersItem) => offersItem.type === event.type)?.offers || [],
-      description: destinations.find((destinationItem) => destinationItem.id === event.destination)?.description || '',
-      pictures: destinations.find((destinationItem) => destinationItem.id === event.destination)?.pictures || [],
+      offers: offers.find((o) => o.type === event.type)?.offers || [],
+      description: destinations.find((d) => d.id === event.destination)?.description || '',
+      pictures: destinations.find((d) => d.id === event.destination)?.pictures || [],
       destinationName: destination?.name || '',
       currentDestination: destination,
     });
-    this._escKeyDownHandler = this._escKeyDownHandler.bind(this);
+
     this._restoreHandlers();
   }
 
@@ -161,14 +144,75 @@ export default class EditEventView extends AbstractStatefulView {
     return createEditEventTemplate(this._state);
   }
 
-  _setDatepicker() {
+  _restoreHandlers() {
+    this._setTypeChangeHandler();
+    this._setDestinationChangeHandler();
+    this._setFormSubmitHandler();
+    this._setDatepicker();
+  }
 
-    if (this.#datepickerStart) {
-      this.#datepickerStart.destroy();
+  _setTypeChangeHandler() {
+    this._addConditionalListener('.event__type-list', 'change',
+      (evt) => evt.target.tagName === 'INPUT',
+      (evt) => {
+        const newType = evt.target.value;
+        const newOffers = this.#offers.find((o) => o.type === newType)?.offers || [];
+
+        this._setState({
+          type: newType,
+          offersId: [],
+          offers: newOffers
+        });
+
+        this._updateElementText('.event__type-output', newType);
+        this._updateElementAttribute('.event__type-icon', 'src', `img/icons/${newType}.png`);
+        this._closeTypeDropdown();
+      }
+    );
+  }
+
+  _setDestinationChangeHandler() {
+    const destinationInput = this.element.querySelector('.event__input--destination');
+    if (destinationInput) {
+      let timeout;
+      destinationInput.addEventListener('input', (evt) => {
+        clearTimeout(timeout);
+        timeout = setTimeout(() => this._handleDestinationInput(evt.target.value), 300);
+      });
     }
-    if (this.#datepickerEnd) {
-      this.#datepickerEnd.destroy();
+  }
+
+  _handleDestinationInput(destinationName) {
+    if (!destinationName.trim()) {
+      return this._updateDestinationDetails({ description: '', pictures: [] });
     }
+
+    const selectedDestination = this.#destinations.find((d) =>
+      d.name.toLowerCase().includes(destinationName.toLowerCase())
+    );
+
+    if (selectedDestination) {
+      this._updateDestinationDetails(selectedDestination);
+      this._setState({
+        destinationName: selectedDestination.name,
+        destination: selectedDestination.id,
+        description: selectedDestination.description,
+        pictures: selectedDestination.pictures
+      });
+    }
+  }
+
+  _updateDestinationDetails(destination) {
+    this._updateElementText('.event__destination-description', destination.description || '');
+    this._updateElementHTML(
+      '.event__photos-tape',
+      destination.pictures?.map((p) => `<img class="event__photo" src="${p.src}" alt="${p.description}">`).join('') || ''
+    );
+    this._toggleElementVisibility('.event__section--destination', !!destination.description);
+  }
+
+  _setDatepicker() {
+    this._destroyDatepickers();
 
     this.#datepickerStart = flatpickr(
       this.element.querySelector('#event-start-time-1'),
@@ -176,8 +220,10 @@ export default class EditEventView extends AbstractStatefulView {
         enableTime: true,
         dateFormat: 'd/m/y H:i',
         defaultDate: this._state.dateFrom,
-        onChange: this._changeStartDateHandler,
-        onClose: () => {
+        onChange: ([date]) => {
+          this.#datepickerStart?.close();
+          this._setState({ dateFrom: date });
+          this.#datepickerEnd?.set('minDate', date);
         }
       }
     );
@@ -189,100 +235,44 @@ export default class EditEventView extends AbstractStatefulView {
         dateFormat: 'd/m/y H:i',
         defaultDate: this._state.dateTo,
         minDate: this._state.dateFrom,
-        onChange: this._changeEndDateHandler,
-        onClose: () => {
+        onChange: ([date]) => {
+          this.#datepickerEnd?.close();
+          this._setState({ dateTo: date });
         }
       }
     );
   }
 
-  _changeStartDateHandler = ([userDate]) => {
-    // Закрываем datepicker
-    if (this.#datepickerStart) {
-      this.#datepickerStart.close();
-    }
+  _destroyDatepickers() {
+    [this.#datepickerStart, this.#datepickerEnd].forEach((picker) => picker?.destroy());
+  }
 
-    this._setState({
-      dateFrom: userDate
-    }, false); // false - не перерисовывать весь компонент
+  _setFormSubmitHandler() {
+    this.element.addEventListener('submit', (evt) => {
+      evt.preventDefault();
+      this._callback.formSubmit?.(this._state);
+    });
+  }
 
-    // Обновляем минимальную дату для конечного datepicker
-    if (this.#datepickerEnd) {
-      this.#datepickerEnd.set('minDate', userDate);
-    }
-  };
-
-
-  _changeEndDateHandler = ([userDate]) => {
-    if (this.#datepickerEnd) {
-      this.#datepickerEnd.close();
-    }
-
-    this._setState({
-      dateTo: userDate
-    }, false);
-  };
-
-  _restoreHandlers() {
-    this.setTypeChangeHandler();
-    this.setDestinationChangeHandler();
-    this.setFormSubmitHandler(this._callback.formSubmit);
-    this.setEscKeyDownHandler(this._callback.escKeyDown);
-    this.setCloseButtonClickHandler(this._callback.closeButtonClick);
-    this.setRollupButtonClickHandler(this._callback.rollupButtonClick);
-    this._setDatepicker();
-    const destinationInput = this.element.querySelector('.event__input--destination');
-    if (destinationInput) {
-      let timeout;
-      destinationInput.addEventListener('input', (evt) => {
-        clearTimeout(timeout);
-        timeout = setTimeout(() => {
-          this._destinationInputHandler(evt);
-        }, 300);
+  setCloseButtonClickHandler(callback) {
+    this._callback.closeButtonClick = callback;
+    const button = this.element.querySelector('.event__reset-btn');
+    if (button) {
+      button.addEventListener('click', (evt) => {
+        evt.preventDefault();
+        this._callback.closeButtonClick?.();
       });
     }
   }
 
-  setTypeChangeHandler() {
-    const typeList = this.element.querySelector('.event__type-list');
-    if (typeList) {
-      typeList.addEventListener('change', (evt) => {
-        if (evt.target.tagName === 'INPUT') {
-          this._typeChangeHandler(evt);
-          this._closeTypeDropdown();
-        }
+  setRollupButtonClickHandler(callback) {
+    this._callback.rollupButtonClick = callback;
+    const button = this.element.querySelector('.event__rollup-btn');
+    if (button) {
+      button.addEventListener('click', (evt) => {
+        evt.preventDefault();
+        this._callback.rollupButtonClick?.();
       });
-    }
-  }
-
-  setDestinationChangeHandler() {
-    const destinationInput = this.element.querySelector('.event__input--destination');
-    if (destinationInput) {
-      destinationInput.addEventListener('input', this._destinationInputHandler.bind(this));
-    }
-  }
-
-  _typeChangeHandler(evt) {
-    const newType = evt.target.value;
-    const newOffers = this.#offers.find((offer) => offer.type === newType)?.offers || [];
-
-    this._closeTypeDropdown();
-
-    this._setState({
-      type: newType,
-      offersId: [],
-      offers: newOffers
-    }, false);
-
-    this._updateOffersSection(newOffers);
-    this._updateTypeIcon(newType);
-    this._updateTypeOutput(newType);
-  }
-
-  _updateTypeOutput(type) {
-    const typeOutput = this.element.querySelector('.event__type-output');
-    if (typeOutput) {
-      typeOutput.textContent = type;
     }
   }
 
@@ -293,154 +283,44 @@ export default class EditEventView extends AbstractStatefulView {
     }
   }
 
-  _destinationInputHandler(evt) {
-    const destinationName = evt.target.value;
-
-    // Сбрасываем состояние если поле пустое
-    if (!destinationName.trim()) {
-      this._updateDestinationDetails({
-        description: '',
-        pictures: []
-      });
-      return;
-    }
-
-    const selectedDestination = this.#destinations.find((dest) =>
-      dest.name.toLowerCase().includes(destinationName.toLowerCase())
-    );
-
-    if (selectedDestination) {
-      this._updateDestinationDetails(selectedDestination);
-      this._setState({
-        destinationName: selectedDestination.name,
-        destination: selectedDestination.id,
-        description: selectedDestination.description,
-        pictures: selectedDestination.pictures
-      }, false);
+  _addConditionalListener(selector, event, condition, handler) {
+    const element = this.element.querySelector(selector);
+    if (element) {
+      element.addEventListener(event, (evt) => condition(evt) && handler(evt));
     }
   }
 
-  _updateDestinationDetails(destination) {
-    // Обновляем описание
-    const descriptionElement = this.element.querySelector('.event__destination-description');
-    if (descriptionElement) {
-      descriptionElement.textContent = destination.description || '';
-    }
-
-    // Обновляем фотографии
-    const photosContainer = this.element.querySelector('.event__photos-tape');
-    if (photosContainer) {
-      photosContainer.innerHTML = destination.pictures ? destination.pictures.map((photo) => `
-        <img class="event__photo" src="${photo.src}" alt="${photo.description}">
-      `).join('') : '';
-    }
-
-    // Обновляем видимость секции
-    const destinationSection = this.element.querySelector('.event__section--destination');
-    if (destinationSection) {
-      destinationSection.style.display = destination.description ? 'block' : 'none';
+  _updateElementText(selector, text) {
+    const element = this.element.querySelector(selector);
+    if (element) {
+      element.textContent = text;
     }
   }
 
-  setFormSubmitHandler(callback) {
-    this._callback.formSubmit = callback;
-    this.element.addEventListener('submit', this._formSubmitHandler);
-  }
-
-  _formSubmitHandler = (evt) => {
-    evt.preventDefault();
-    this._callback.formSubmit(this._state);
-  };
-
-  setEscKeyDownHandler(callback) {
-    this._callback.escKeyDown = callback;
-    document.addEventListener('keydown', this._escKeyDownHandler);
-  }
-
-  _escKeyDownHandler = (evt) => {
-    if (evt.key === 'Escape' || evt.key === 'Esc') {
-      evt.preventDefault();
-      document.removeEventListener('keydown', this._escKeyDownHandler);
-      this._callback.escKeyDown();
-    }
-  };
-
-  _rollupButtonClickHandler = (evt) => {
-    evt.preventDefault();
-    this._callback.rollupButtonClick();
-  };
-
-
-  setCloseButtonClickHandler(callback) {
-    this._callback.closeButtonClick = callback;
-    const resetButton = this.element.querySelector('.event__reset-btn');
-    resetButton.addEventListener('click', this._closeButtonClickHandler);
-  }
-
-  setRollupButtonClickHandler(callback) {
-    this._callback.rollupButtonClick = callback;
-    const rollupButton = this.element.querySelector('.event__rollup-btn');
-    if (rollupButton) {
-      rollupButton.addEventListener('click', this._rollupButtonClickHandler);
+  _updateElementAttribute(selector, attr, value) {
+    const element = this.element.querySelector(selector);
+    if (element) {
+      element[attr] = value;
     }
   }
 
-  _closeButtonClickHandler = (evt) => {
-    evt.preventDefault();
-    this._callback.closeButtonClick();
-  };
+  _updateElementHTML(selector, html) {
+    const element = this.element.querySelector(selector);
+    if (element) {
+      element.innerHTML = html;
+    }
+  }
+
+  _toggleElementVisibility(selector, isVisible) {
+    const element = this.element.querySelector(selector);
+    if (element) {
+      element.style.display = isVisible ? 'block' : 'none';
+    }
+  }
 
   removeElement() {
     super.removeElement();
-
-    if (this.#datepickerStart) {
-      this.#datepickerStart.destroy();
-      this.#datepickerStart = null;
-    }
-
-    if (this.#datepickerEnd) {
-      this.#datepickerEnd.destroy();
-      this.#datepickerEnd = null;
-    }
-  }
-
-  _updateOffersSection(offers) {
-    const offersContainer = this.element.querySelector('.event__available-offers');
-    if (offersContainer) {
-      offersContainer.innerHTML = this._returnOffersTemplate(offers);
-    }
-  }
-
-  _updateTypeIcon(type) {
-    const icon = this.element.querySelector('.event__type-icon');
-    if (icon) {
-      icon.src = `img/icons/${type}.png`;
-    }
-  }
-
-  _returnOffersTemplate(offers) {
-    return createOffersTemplate(offers);
-  }
-
-  showError(message) {
-    // Удаляем предыдущие сообщения об ошибке
-    const existingError = this.element.querySelector('.event__error');
-    if (existingError) {
-      existingError.remove();
-    }
-
-    // Создаем элемент ошибки
-    const errorElement = document.createElement('div');
-    errorElement.className = 'event__error';
-    errorElement.style.color = 'red';
-    errorElement.style.marginTop = '10px';
-    errorElement.textContent = message;
-
-    // Добавляем перед кнопками
-    const header = this.element.querySelector('.event__header');
-    if (header) {
-      header.appendChild(errorElement);
-    }
+    this._destroyDatepickers();
   }
 
   shake() {
@@ -448,5 +328,19 @@ export default class EditEventView extends AbstractStatefulView {
     setTimeout(() => {
       this.element.style.animation = '';
     }, 500);
+  }
+
+  setFormSubmitHandler(callback) {
+    this._callback.formSubmit = callback;
+  }
+
+  setEscKeyDownHandler(callback) {
+    this._callback.escKeyDown = callback;
+    document.addEventListener('keydown', (evt) => {
+      if (evt.key === 'Escape' || evt.key === 'Esc') {
+        evt.preventDefault();
+        this._callback.escKeyDown?.();
+      }
+    });
   }
 }

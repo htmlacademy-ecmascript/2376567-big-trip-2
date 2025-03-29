@@ -46,7 +46,7 @@ export default class BoardPresenter {
       await this.#boardModel.updateEvent(updatedEvent);
       this.#eventsPresenter.updateEvent(updatedEvent);
     } catch (err) {
-      console.error('Ошибка при обновлении события', err);
+      console.log('Ошибка при обновлении события', err);
       throw err;
     }
   };
@@ -93,8 +93,8 @@ export default class BoardPresenter {
       this.#addEventForm.removeElement();
     }
     this.#addEventForm = addEventView;
-    render(this.#addEventForm, this.#eventsListComponent.element, 'afterbegin');
     this.#eventsPresenter.resetAllViews();
+    render(this.#addEventForm, this.#eventsListComponent.element, 'afterbegin');
   }
 
   _handleModelChange(actionType) {
@@ -105,7 +105,7 @@ export default class BoardPresenter {
         this.updateEvents(this.#boardModel.events);
         break;
       default:
-        console.warn(`Необработанное событие: ${actionType}`);
+        console.log(`Необработанное событие: ${actionType}`);
     }
   }
 

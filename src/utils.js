@@ -55,7 +55,6 @@ const convertDateToISO = (date) => {
     return date.toISOString();
   }
 
-  console.error('Unsupported date format:', date);
   return null;
 };
 
