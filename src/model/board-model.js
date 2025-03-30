@@ -31,6 +31,7 @@ export default class BoardModel extends Observable {
 
   async loadEvents() {
     const events = await this.eventsApiService.points;
+    console.log(events);
     this.#events = events;
     this._notify(USER_ACTIONS.EVENTS_LOADED, events);
   }

@@ -73,19 +73,23 @@ export default class EventPresenter {
       this.#offerAll
     );
 
-    // Новый обработчик отправки формы
+    // Устанавливаем один обработчик отправки формы
     this.#editEventView.setFormSubmitHandler((updatedEvent) => {
-      this.#editEventView.setSaving(true); // Блокируем кнопку
+      this.#editEventView.setSaving(true);
 
       this.#onDataChange(updatedEvent)
         .then(() => {
-          this._replaceFormWithEvent(); // Закрываем форму только после успеха
+          this._replaceFormWithEvent();
+          this.update(updatedEvent,
+            this.#destinationAll.find(d => d.id === updatedEvent.destination),
+            this.#offerAll.find(o => o.type === updatedEvent.type)
+          );
         })
         .catch(() => {
-          this.#editEventView.shake(); // Показываем ошибку
+          this.#editEventView.shake();
         })
         .finally(() => {
-          this.#editEventView.setSaving(false); // Разблокируем кнопку
+          this.#editEventView.setSaving(false);
         });
     });
 
@@ -144,6 +148,7 @@ export default class EventPresenter {
   }
 
   async _handleFormSubmit() {
+    console.log('!!!');
     const formData = new FormData(this.#editEventView.element);
     const destinationName = formData.get('event-destination');
 

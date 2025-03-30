@@ -47,7 +47,7 @@ export default class BoardPresenter {
       this.#eventsPresenter.updateEvent(updatedEvent);
     } catch (err) {
       console.log('Ошибка при обновлении события', err);
-      throw err;
+      // throw err;
     }
   };
 
@@ -102,12 +102,31 @@ export default class BoardPresenter {
       case USER_ACTIONS.ADD_EVENT:
       case USER_ACTIONS.UPDATE_EVENT:
       case USER_ACTIONS.DELETE_EVENT:
+        console.log('произошло обновление');
         this.updateEvents(this.#boardModel.events);
         break;
       default:
         console.log(`Необработанное событие: ${actionType}`);
     }
   }
+
+  // _handleModelChange(actionType, payload) {
+  //   console.log('Model change:', actionType, payload);
+
+  //   switch (actionType) {
+  //     case USER_ACTIONS.ADD_EVENT:
+  //       this.updateEvents(this.#boardModel.events);
+  //       break;
+  //     case USER_ACTIONS.UPDATE_EVENT:
+  //       this.#eventsPresenter.updateEvent(payload);
+  //       break;
+  //     case USER_ACTIONS.DELETE_EVENT:
+  //       this.#eventsPresenter.deleteEvent(payload);
+  //       break;
+  //     default:
+  //       console.log(`Необработанное событие: ${actionType}`);
+  //   }
+  // }
 
   resetAllViews() {
     this.#eventsPresenter.resetAllViews();

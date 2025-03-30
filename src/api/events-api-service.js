@@ -1,4 +1,3 @@
-/* eslint-disable camelcase */
 import ApiService from '../framework/api-service';
 import { convertDateToISO } from '../utils';
 
@@ -32,8 +31,6 @@ export default class EventsApiService extends ApiService {
     });
 
     const parsedResponse = await ApiService.parseResponse(response);
-
-    console.log('updatePoint', this.#adaptToClient(parsedResponse));
 
     return this.#adaptToClient(parsedResponse);
   }
@@ -88,6 +85,7 @@ export default class EventsApiService extends ApiService {
       type: point.type
     };
 
+    // Удаляем серверные поля
     delete adaptedPoint.base_price;
     delete adaptedPoint.date_from;
     delete adaptedPoint.date_to;
@@ -102,39 +100,49 @@ export default class EventsApiService extends ApiService {
       return null;
     }
 
-    const destinations = await this.getDestinations();
-    if (!destinations || !Array.isArray(destinations)) {
-      console.error('Пункты назначения не загружены или неверный формат данных');
+    try {
+      const destinations = await this.getDestinations(); // Await the promise
+      console.log('Destinations loaded:', destinations);
+
+      if (!destinations || !Array.isArray(destinations)) {
+        console.error('Пункты назначения не загружены или неверный формат данных');
+        return null;
+      }
+
+      // Приводим оба ID к строке для сравнения
+      const searchId = String(id).toLowerCase();
+
+      return destinations.find((dest) => {
+        if (!dest?.id) { return false; }
+        return String(dest.id).toLowerCase() === searchId;
+      });
+    } catch (error) {
+      console.error('Error fetching destinations:', error);
       return null;
     }
-
-    return destinations.find(dest => dest.id === id);
   }
 
-  async #adaptToServer(point) {
-
-    const destinationObj = await this.getDestinationById(point.destination);
+  #adaptToServer(point) {
+    // Получаем полный объект destination по ID
+    const destinationObj = this.getDestinationById(point.destination);
 
     const adaptedPoint = {
       ...point,
       base_price: point.basePrice,
       date_from: convertDateToISO(point.dateFrom),
       date_to: convertDateToISO(point.dateTo),
-      destination: destinationObj?.id || point.destination,
+      destination: destinationObj?.id || point.destination, // Используем UUID
       is_favorite: point.favorite,
       offers: point.offersId,
       type: point.type
     };
 
+    // Удаляем клиентские поля
     delete adaptedPoint.basePrice;
     delete adaptedPoint.dateFrom;
     delete adaptedPoint.dateTo;
     delete adaptedPoint.favorite;
     delete adaptedPoint.offersId;
-    delete adaptedPoint.destinationName;
-    delete adaptedPoint.description;
-    delete adaptedPoint.pictures;
-    delete adaptedPoint.currentDestination;
 
     return adaptedPoint;
   }

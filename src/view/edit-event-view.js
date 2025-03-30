@@ -175,34 +175,98 @@ export default class EditEventView extends AbstractStatefulView {
     }
   }
 
+  // _handleFormSubmit() {
+  //   console.log('!!!');
+  //   const formData = new FormData(this.element);
+  //   const destinationName = formData.get('event-destination');
+  //   const destination = this.#destinations.find((d) => d.name === destinationName);
+
+  //   if (!destination) {
+  //     this.shake();
+  //     return;
+  //   }
+
+  //   if (!formData.get('event-start-time') || !formData.get('event-end-time')) {
+  //     this.shake();
+  //     return;
+  //   }
+
+  //   const updatedEvent = {
+  //     id: this._state.id, // Сохраняем оригинальный ID
+  //     basePrice: Number(formData.get('event-price')),
+  //     dateFrom: convertDateToISO(formData.get('event-start-time')),
+  //     dateTo: convertDateToISO(formData.get('event-end-time')),
+  //     destination: destination.id,
+  //     favorite: this._state.favorite, // Сохраняем оригинальное значение
+  //     type: formData.get('event-type'),
+  //     offersId: Array.from(this.element.querySelectorAll('.event__offer-checkbox:checked'))
+  //       .map((input) => input.value),
+  //   };
+
+  //   console.log('Submitting event:', updatedEvent);
+  //   this._callback.formSubmit?.(updatedEvent); // Вызываем колбэк с обновленными данными
+  // }
+
   _handleFormSubmit() {
+    console.log('!!!');
     const formData = new FormData(this.element);
+
     const destinationName = formData.get('event-destination');
     const destination = this.#destinations.find((d) => d.name === destinationName);
 
     if (!destination) {
+      console.error('Destination not found');
       this.shake();
       return;
     }
 
-    if (!formData.get('event-start-time') || !formData.get('event-end-time')) {
+    const type = formData.get('event-type');
+    const validTypes = ['taxi', 'bus', 'train', 'flight', 'check-in', 'sightseeing', 'ship', 'drive', 'restaurant'];
+
+    if (!validTypes.includes(type)) {
+      console.error('Invalid event type');
+      this.shake();
+      return;
+    }
+
+    const basePrice = Number(formData.get('event-price'));
+    if (isNaN(basePrice) || basePrice < 1 || basePrice > 100000) {
+      console.error('Invalid base price');
+      this.shake();
+      return;
+    }
+
+    const dateFrom = convertDateToISO(formData.get('event-start-time'));
+    const dateTo = convertDateToISO(formData.get('event-end-time'));
+
+    if (!dateFrom || !dateTo || new Date(dateFrom) >= new Date(dateTo)) {
+      console.error('Invalid date range');
+      this.shake();
+      return;
+    }
+
+    const offersId = Array.from(
+      this.element.querySelectorAll('.event__offer-checkbox:checked')
+    ).map((input) => input.value);
+
+    if (offersId.length === 0) {
+      console.error('No offers selected');
       this.shake();
       return;
     }
 
     const updatedEvent = {
-      id: this._state.id, // Сохраняем оригинальный ID
-      basePrice: Number(formData.get('event-price')),
-      dateFrom: convertDateToISO(formData.get('event-start-time')),
-      dateTo: convertDateToISO(formData.get('event-end-time')),
+      id: this._state.id,
+      basePrice,
+      dateFrom,
+      dateTo,
       destination: destination.id,
-      favorite: this._state.favorite, // Сохраняем оригинальное значение
-      type: formData.get('event-type'),
-      offersId: Array.from(this.element.querySelectorAll('.event__offer-checkbox:checked'))
-        .map((input) => input.value),
+      favorite: Boolean(this._state.favorite),
+      type,
+      offersId,
     };
 
-    // Передаем данные через колбэк
+    console.log('Submitting event:', updatedEvent);
     this._callback.formSubmit?.(updatedEvent);
   }
 
@@ -311,8 +375,9 @@ export default class EditEventView extends AbstractStatefulView {
 
   _setFormSubmitHandler() {
     this.element.addEventListener('submit', (evt) => {
+      console.log('Form submit event triggered');
       evt.preventDefault();
-      this._callback.formSubmit?.(this._state);
+      this._handleFormSubmit(); // Вызываем _handleFormSubmit вместо this._callback.formSubmit
     });
   }
 
@@ -401,6 +466,7 @@ export default class EditEventView extends AbstractStatefulView {
 
   setFormSubmitHandler(callback) {
     this._callback.formSubmit = callback;
+    console.log(this._callback.formSubmit);
   }
 
   setEscKeyDownHandler(callback) {
