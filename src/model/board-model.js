@@ -58,35 +58,69 @@ export default class BoardModel extends Observable {
     return offersType.offers.filter((item) => itemsId.find((id) => item.id === id));
   }
 
-  addEvent(event) {
-    this.#events = [event, ...this.#events];
-    this._notify(USER_ACTIONS.ADD_EVENT, event);
-  }
-
-  async updateEvent(event) {
+  async addEvent(event) {
     try {
-      const updatedEvent = await this.eventsApiService.updatePoint(event);
-      const index = this.#events.findIndex((e) => e.id === updatedEvent.id);
-      this.#events = [
-        ...this.#events.slice(0, index),
-        updatedEvent,
-        ...this.#events.slice(index + 1),
-      ];
-      this._notify(USER_ACTIONS.UPDATE_EVENT, updatedEvent);
-      return updatedEvent;
+      // 1. Сначала отправляем на сервер
+      const addedEvent = await this.eventsApiService.addPoint(event);
+
+      // 2. Только после успешного ответа обновляем модель
+
+      this.#events = [addedEvent, ...this.#events];
+      console.log('событие обновлено');
+      this._notify(USER_ACTIONS.ADD_EVENT, addedEvent);
+      return addedEvent; // Возвращаем промис
     } catch (err) {
-      console.log('Ошибка при обновлении точки маршрута:', err);
-      throw err;
+      console.error('Add event error:', err);
+      throw err; // Пробрасываем ошибку для обработки в презентере
     }
   }
 
-  deleteEvent(eventId) {
-    const index = this.#events.findIndex((e) => e.id === eventId);
-    this.#events = [
-      ...this.#events.slice(0, index),
-      ...this.#events.slice(index + 1),
-    ];
-    this._notify(USER_ACTIONS.DELETE_EVENT, eventId);
+  async updateEvent(event) {
+
+    try {
+      // Проверяем обязательные поля перед отправкой
+      if (!event?.id || !event.destination) {
+        throw new Error('Invalid event data');
+      }
+
+      const updatedEvent = await this.eventsApiService.updatePoint(event);
+      const index = this.#events.findIndex(e => e.id === updatedEvent.id);
+
+      if (index === -1) {
+        throw new Error('Event not found in local model');
+      }
+
+      this.#events = [
+        ...this.#events.slice(0, index),
+        updatedEvent,
+        ...this.#events.slice(index + 1)
+      ];
+
+      this._notify(USER_ACTIONS.UPDATE_EVENT, updatedEvent);
+      return updatedEvent;
+    } catch (error) {
+      console.error('Update event error:', error);
+      throw error;
+    }
+  }
+
+  async deleteEvent(eventId) {
+    try {
+      // Не ожидаем данных в ответе, только статус
+      await this.eventsApiService.deletePoint(eventId);
+
+      const index = this.#events.findIndex((e) => e.id === eventId);
+      if (index !== -1) {
+        this.#events = [
+          ...this.#events.slice(0, index),
+          ...this.#events.slice(index + 1)
+        ];
+        this._notify(USER_ACTIONS.DELETE_EVENT, eventId);
+      }
+    } catch (error) {
+      console.error('Ошибка при удалении события', error);
+      throw error;
+    }
   }
 
   changeSortType(sortType) {

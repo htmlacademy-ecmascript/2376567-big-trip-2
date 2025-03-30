@@ -3,6 +3,7 @@ import { POINT_TYPES, DESTINATIONS } from '../const.js';
 import AbstractStatefulView from '../framework/view/abstract-stateful-view.js';
 import flatpickr from 'flatpickr';
 import 'flatpickr/dist/flatpickr.min.css';
+import { convertDateToISO } from '../utils.js';
 
 const DATE_FORMAT = 'DD/MM/YY HH:mm';
 
@@ -22,8 +23,18 @@ const createOffersTemplate = (offers, selectedOffers = []) => offers.map((offer)
 `).join('');
 
 const createEditEventTemplate = (state) => {
-  const { type, basePrice, dateFrom, dateTo, offersId = [], offers = [],
-    description = '', pictures = [], destinationName = '' } = state;
+  const {
+    type,
+    basePrice,
+    dateFrom,
+    dateTo,
+    offersId = [],
+    offers = [],
+    description,
+    pictures,
+    destinationName,
+    destinationNames
+  } = state;
 
   const renderSectionIf = (condition, content) => condition ? content : '';
 
@@ -58,7 +69,7 @@ const createEditEventTemplate = (state) => {
                  type="text" name="event-destination" value="${destinationName}"
                  list="destination-list-1">
           <datalist id="destination-list-1">
-            ${DESTINATIONS.map((dest) => `<option value="${dest}"></option>`).join('')}
+            ${destinationNames.map((dest) => `<option value="${dest}"></option>`).join('')}
           </datalist>
         </div>
 
@@ -127,14 +138,18 @@ export default class EditEventView extends AbstractStatefulView {
     this.#destinations = destinations;
     this.#offers = offers;
 
+    const selectedDestination = this.#destinations.find(d => d.id === event.destination) || {};
+    const extractDestinationNames = this.#destinations.map(item => item.name);
+
     this._setState({
       ...event,
       destination: event.destination,
       offers: offers.find((o) => o.type === event.type)?.offers || [],
-      description: destinations.find((d) => d.id === event.destination)?.description || '',
-      pictures: destinations.find((d) => d.id === event.destination)?.pictures || [],
-      destinationName: destination?.name || '',
-      currentDestination: destination,
+      description: selectedDestination.description || '',
+      pictures: selectedDestination.pictures || [],
+      destinationName: selectedDestination.name || '',
+      currentDestination: selectedDestination,
+      destinationNames: extractDestinationNames,
     });
 
     this._restoreHandlers();
@@ -142,6 +157,53 @@ export default class EditEventView extends AbstractStatefulView {
 
   get template() {
     return createEditEventTemplate(this._state);
+  }
+
+  setSaving(isSaving) {
+    const submitButton = this.element.querySelector('.event__save-btn');
+    if (submitButton) {
+      submitButton.disabled = isSaving;
+      submitButton.textContent = isSaving ? 'Saving...' : 'Save';
+    }
+  }
+
+  setDeleting(isDeleting) {
+    const deleteButton = this.element.querySelector('.event__reset-btn');
+    if (deleteButton) {
+      deleteButton.disabled = isDeleting;
+      deleteButton.textContent = isDeleting ? 'Deleting...' : 'Delete';
+    }
+  }
+
+  _handleFormSubmit() {
+    const formData = new FormData(this.element);
+    const destinationName = formData.get('event-destination');
+    const destination = this.#destinations.find((d) => d.name === destinationName);
+
+    if (!destination) {
+      this.shake();
+      return;
+    }
+
+    if (!formData.get('event-start-time') || !formData.get('event-end-time')) {
+      this.shake();
+      return;
+    }
+
+    const updatedEvent = {
+      id: this._state.id, // Сохраняем оригинальный ID
+      basePrice: Number(formData.get('event-price')),
+      dateFrom: convertDateToISO(formData.get('event-start-time')),
+      dateTo: convertDateToISO(formData.get('event-end-time')),
+      destination: destination.id,
+      favorite: this._state.favorite, // Сохраняем оригинальное значение
+      type: formData.get('event-type'),
+      offersId: Array.from(this.element.querySelectorAll('.event__offer-checkbox:checked'))
+        .map((input) => input.value),
+    };
+
+    // Передаем данные через колбэк
+    this._callback.formSubmit?.(updatedEvent);
   }
 
   _restoreHandlers() {
@@ -254,15 +316,22 @@ export default class EditEventView extends AbstractStatefulView {
     });
   }
 
-  setCloseButtonClickHandler(callback) {
-    this._callback.closeButtonClick = callback;
-    const button = this.element.querySelector('.event__reset-btn');
-    if (button) {
-      button.addEventListener('click', (evt) => {
+  setCloseButtonClickHandler() {
+    const deleteButton = this.element.querySelector('.event__reset-btn');
+    if (deleteButton) {
+      deleteButton.addEventListener('click', (evt) => {
         evt.preventDefault();
-        this._callback.closeButtonClick?.();
+        if (typeof this._callback.deleteClick === 'function') {
+          this._callback.deleteClick();
+        } else {
+          console.error('ошибка setCloseButtonClickHandler');
+        }
       });
     }
+  }
+
+  setDeleteClickHandler(callback) {
+    this._callback.deleteClick = callback;
   }
 
   setRollupButtonClickHandler(callback) {

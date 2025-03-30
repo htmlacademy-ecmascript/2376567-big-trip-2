@@ -42,10 +42,24 @@ export default class EventsPresenter {
       offerAll: this.#offers,
       onFormOpen: this.resetAllViews.bind(this),
       onUserAction: this.handleUserAction.bind(this),
+      onDelete: async (eventId) => { // Явная передача обработчика
+        console.log('Удаляем событие из презентера', eventId);
+        await this.handleDeleteEvent(eventId);
+      }
     });
 
     eventPresenter.init(this.#eventsListComponent.element);
     this.#eventPresenters.set(event.id, eventPresenter);
+}
+
+  async handleDeleteEvent(eventId) {
+    try {
+      await this.#boardModel.deleteEvent(eventId); // Ждем подтверждения от сервера
+      this._renderEvents(); // Обновляем список только после успеха
+    } catch (error) {
+      console.error('Ошибка при удалении события:', error);
+      throw error; // Пробрасываем ошибку для обработки в презентере события
+    }
   }
 
   _renderEvents() {
@@ -81,17 +95,21 @@ export default class EventsPresenter {
   handleUserAction(actionType, payload) {
     switch (actionType) {
       case USER_ACTIONS.ADD_EVENT:
-        this.#boardModel.addEvent(payload);
+        // Теперь обработка добавления полностью в HeaderPresenter
         break;
       case USER_ACTIONS.UPDATE_EVENT:
-        this.#boardModel.updateEvent(payload);
+        this.#boardModel.updateEvent(payload)
+          .then(() => this._renderEvents())
+          .catch(() => this._renderEvents());
         break;
       case USER_ACTIONS.DELETE_EVENT:
-        this.#boardModel.deleteEvent(payload);
-        break;
+        return this.#boardModel.deleteEvent(payload)
+          .then(() => this._renderEvents())
+          .catch(() =>
+            // Ошибка уже обработана в презентере события
+            Promise.reject()
+          );
     }
-    this.events = this.#boardModel.events;
-    this._renderEvents();
   }
 
   updateEvent(updatedEvent) {

@@ -33,6 +33,8 @@ export default class EventsApiService extends ApiService {
 
     const parsedResponse = await ApiService.parseResponse(response);
 
+    console.log('updatePoint', this.#adaptToClient(parsedResponse));
+
     return this.#adaptToClient(parsedResponse);
   }
 
@@ -52,12 +54,15 @@ export default class EventsApiService extends ApiService {
   async deletePoint(pointId) {
     const response = await this._load({
       url: `points/${pointId}`,
-      method: Method.DELETE,
+      method: Method.DELETE
     });
 
-    const parsedResponse = await ApiService.parseResponse(response);
+    // Если сервер возвращает пустой ответ, не пытаемся парсить JSON
+    if (response.status === 204 || response.status === 200) {
+      return null;
+    }
 
-    return parsedResponse;
+    return ApiService.parseResponse(response);
   }
 
   async getDestinations() {
@@ -92,30 +97,23 @@ export default class EventsApiService extends ApiService {
     return adaptedPoint;
   }
 
-  getDestinationById(id) {
+  async getDestinationById(id) {
     if (!id) {
       return null;
     }
 
-    const destinations = this.getDestinations();
+    const destinations = await this.getDestinations();
     if (!destinations || !Array.isArray(destinations)) {
       console.error('Пункты назначения не загружены или неверный формат данных');
       return null;
     }
 
-    const searchId = String(id).toLowerCase();
-
-    return destinations.find((dest) => {
-      if (!dest?.id) {
-        return false;
-      }
-      return String(dest.id).toLowerCase() === searchId;
-    });
+    return destinations.find(dest => dest.id === id);
   }
 
-  #adaptToServer(point) {
+  async #adaptToServer(point) {
 
-    const destinationObj = this.getDestinationById(point.destination);
+    const destinationObj = await this.getDestinationById(point.destination);
 
     const adaptedPoint = {
       ...point,
@@ -133,6 +131,10 @@ export default class EventsApiService extends ApiService {
     delete adaptedPoint.dateTo;
     delete adaptedPoint.favorite;
     delete adaptedPoint.offersId;
+    delete adaptedPoint.destinationName;
+    delete adaptedPoint.description;
+    delete adaptedPoint.pictures;
+    delete adaptedPoint.currentDestination;
 
     return adaptedPoint;
   }

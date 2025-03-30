@@ -35,15 +35,7 @@ export default class HeaderPresenter {
   }
 
   _handleNewEventClick() {
-    if (this.#isFormOpen) {
-      return;
-    }
-
-    const destinations = this.#boardModel.destinations;
-    const offers = this.#boardModel.offers;
-
-    this.#boardPresenter.resetAllViews();
-    this.#boardPresenter.resetFiltersAndSorting();
+    if (this.#isFormOpen) return;
 
     const newEvent = {
       id: null,
@@ -58,14 +50,29 @@ export default class HeaderPresenter {
     this.#newAddEventView = new AddEventView({
       event: newEvent,
       destination: null,
-      offer: offers.find((offer) => offer.type === newEvent.type) || null,
-      destinations: destinations || [],
-      offers: offers || [],
+      offer: this.#boardModel.offers.find((o) => o.type === newEvent.type) || null,
+      destinations: this.#boardModel.destinations || [],
+      offers: this.#boardModel.offers || [],
     });
 
-    this.#newAddEventView.setFormSubmitHandler((newEvn) => this._handleFormSubmit(newEvn));
-    this.#newAddEventView.setCancelClickHandler(() => this._closeForm());
+    // Новый обработчик отправки формы
+    this.#newAddEventView.setFormSubmitHandler((newEventData) => {
+      this.#newAddEventView.setSaving(true); // Блокируем кнопку
 
+      this.#boardModel.addEvent(newEventData)
+        .then(() => {
+          this._closeForm(); // Закрываем форму только после успешного сохранения
+        })
+        .catch((err) => {
+          console.error('Ошибка сохранения:', err);
+          this.#newAddEventView.shake(); // Показываем ошибку
+        })
+        .finally(() => {
+          this.#newAddEventView.setSaving(false); // Разблокируем кнопку
+        });
+    });
+
+    this.#newAddEventView.setCancelClickHandler(() => this._closeForm());
     this.#boardPresenter.showAddEventForm(this.#newAddEventView);
     this.#isFormOpen = true;
     this.#tripMainView.blockNewEventButton();

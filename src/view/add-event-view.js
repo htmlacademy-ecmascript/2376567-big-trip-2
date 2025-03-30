@@ -26,7 +26,7 @@ const createOffersTemplate = (offers, selectedOffers = []) => offers.map((offer)
 
 const createAddEventTemplate = (state) => {
   const { type, basePrice, dateFrom, dateTo, offersId = [], offers = [],
-    description = '', pictures = [], destinationName = '' } = state;
+    description = '', pictures = [], destinationName = '', destinationNames } = state;
 
   const renderSectionIf = (condition, content) => condition ? content : '';
 
@@ -61,7 +61,7 @@ const createAddEventTemplate = (state) => {
                  type="text" name="event-destination" value="${destinationName}"
                  list="destination-list-1">
           <datalist id="destination-list-1">
-            ${DESTINATIONS.map((dest) => `<option value="${dest}"></option>`).join('')}
+            ${destinationNames.map((dest) => `<option value="${dest}"></option>`).join('')}
           </datalist>
           <div class="event__error" style="display: none;"></div>
         </div>
@@ -128,13 +128,16 @@ export default class AddEventView extends AbstractStatefulView {
     this.#destinations = destinations || [];
     this.#offers = offers || [];
 
+    const extractDestinationNames = this.#destinations.map((item) => item.name);
+
     this._setState({
       ...event,
       destination: event.destination,
       offers: offer?.offers || [],
       description: destinations.find((d) => d.id === event.destination)?.description || '',
       pictures: destinations.find((d) => d.id === event.destination)?.pictures || [],
-      destinationName: destination?.name || ''
+      destinationName: destination?.name || '',
+      destinationNames: extractDestinationNames
     });
 
     this._restoreHandlers();
@@ -142,6 +145,14 @@ export default class AddEventView extends AbstractStatefulView {
 
   get template() {
     return createAddEventTemplate(this._state);
+  }
+
+  setSaving(isSaving) {
+    const submitButton = this.element.querySelector('.event__save-btn');
+    if (submitButton) {
+      submitButton.disabled = isSaving;
+      submitButton.textContent = isSaving ? 'Saving...' : 'Save';
+    }
   }
 
   _restoreHandlers() {
@@ -286,7 +297,7 @@ export default class AddEventView extends AbstractStatefulView {
     }
 
     const newEvent = {
-      id: nanoid(),
+      id: null, // Сервер сгенерирует ID
       basePrice: Number(formData.get('event-price')),
       dateFrom: convertDateToISO(formData.get('event-start-time')),
       dateTo: convertDateToISO(formData.get('event-end-time')),
@@ -297,6 +308,7 @@ export default class AddEventView extends AbstractStatefulView {
         .map((input) => input.value),
     };
 
+    // Передаем данные через колбэк
     this._callback.formSubmit?.(newEvent);
   }
 

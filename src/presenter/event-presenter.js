@@ -15,8 +15,9 @@ export default class EventPresenter {
   #offerAll = null;
   #onFormOpen = null;
   #onUserAction = null;
+  #onDelete = null;
 
-  constructor({ event, destination, offer, onDataChange, destinationAll, offerAll, onFormOpen, onUserAction }) {
+  constructor({ event, destination, offer, onDataChange, destinationAll, offerAll, onFormOpen, onUserAction, onDelete }) {
     this.#event = event;
     this.#destination = destination;
     this.#offer = offer;
@@ -25,6 +26,7 @@ export default class EventPresenter {
     this.#offerAll = offerAll;
     this.#onFormOpen = onFormOpen;
     this.#onUserAction = onUserAction;
+    this.#onDelete = onDelete;
   }
 
   init(container) {
@@ -68,18 +70,31 @@ export default class EventPresenter {
       this.#destination,
       this.#offer,
       this.#destinationAll,
-      this.#offerAll,
-      () => this._deleteFormEvent()
+      this.#offerAll
     );
 
-    this.#editEventView.setFormSubmitHandler(() => this._handleFormSubmit());
+    // Новый обработчик отправки формы
+    this.#editEventView.setFormSubmitHandler((updatedEvent) => {
+      this.#editEventView.setSaving(true); // Блокируем кнопку
+
+      this.#onDataChange(updatedEvent)
+        .then(() => {
+          this._replaceFormWithEvent(); // Закрываем форму только после успеха
+        })
+        .catch(() => {
+          this.#editEventView.shake(); // Показываем ошибку
+        })
+        .finally(() => {
+          this.#editEventView.setSaving(false); // Разблокируем кнопку
+        });
+    });
+
+    this.#editEventView.setDeleteClickHandler(() => this._deleteFormEvent());
     this.#editEventView.setEscKeyDownHandler(() => this._replaceFormWithEvent());
     this.#editEventView.setCloseButtonClickHandler(() => this._deleteFormEvent());
     this.#editEventView.setRollupButtonClickHandler(() => this._replaceFormWithEvent());
 
-    if (this.#eventView.element.parentElement) {
-      replace(this.#editEventView, this.#eventView);
-    }
+    replace(this.#editEventView, this.#eventView);
   }
 
   _replaceFormWithEvent() {
@@ -94,11 +109,41 @@ export default class EventPresenter {
     this.#editEventView = null;
   }
 
-  _deleteFormEvent() {
-    this.#onUserAction(USER_ACTIONS.DELETE_EVENT, this.#event.id);
+  async _deleteFormEvent() {
+    if (!this.#editEventView) {
+      console.error('Форма не инициализирована');
+      return;
+    }
+
+    console.log('Удаление для события с ID', this.#event.id);
+    this.#editEventView.setDeleting(true);
+
+    try {
+      // Сохраняем ссылку на форму перед удалением
+      const editView = this.#editEventView;
+      editView.setDeleting(true);
+
+      await this.#onDelete(this.#event.id);
+
+      // Проверяем, существует ли ещё форма перед обновлением
+      if (this.#editEventView) {
+        this._replaceFormWithEvent();
+      }
+    } catch (error) {
+      console.error('Ошибка удаления', error);
+      // Проверяем, существует ли ещё форма перед показом ошибки
+      if (this.#editEventView) {
+        this.#editEventView.shake();
+      }
+    } finally {
+      // Проверяем, существует ли ещё форма перед разблокировкой
+      if (this.#editEventView) {
+        this.#editEventView.setDeleting(false);
+      }
+    }
   }
 
-  _handleFormSubmit() {
+  async _handleFormSubmit() {
     const formData = new FormData(this.#editEventView.element);
     const destinationName = formData.get('event-destination');
 
@@ -106,7 +151,7 @@ export default class EventPresenter {
 
     if (!destination) {
       this.#editEventView.shake();
-      return;
+      throw new Error('Destination не найдены');
     }
 
     const dateFromString = formData.get('event-start-time');
