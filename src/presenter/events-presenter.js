@@ -4,18 +4,18 @@ import { render } from '../framework/render.js';
 import { USER_ACTIONS } from '../const.js';
 
 export default class EventsPresenter {
-  events = null;
-  #destinations = null;
-  #offers = null;
-  #boardModel = null;
-  #eventsListComponent = null;
-  #onDataChange = null;
-  #eventPresenters = new Map();
-  #filterModel = null;
-  #boardContainer = null;
+  #events = []; // Список событий
+  #destinations = []; // Список мест назначений
+  #offers = []; // Список предложений
+  #boardModel = null; // Модель доски
+  #eventsListComponent = null; // Компонент списка событий
+  #onDataChange = null; // Обработчик изменения данных
+  #eventPresenters = new Map(); // Карта презентеров событий
+  #filterModel = null; // Модель фильтров
+  #boardContainer = null; // Контейнер доски
 
   constructor({ events, destinations, offers, boardModel, eventsListComponent, onDataChange, filterModel, boardContainer }) {
-    this.events = events;
+    this.#events = events;
     this.#destinations = destinations;
     this.#offers = offers;
     this.#boardModel = boardModel;
@@ -42,7 +42,7 @@ export default class EventsPresenter {
       offerAll: this.#offers,
       onFormOpen: this.resetAllViews.bind(this),
       onUserAction: this.handleUserAction.bind(this),
-      onDelete: async (eventId) => { // Явная передача обработчика
+      onDelete: async (eventId) => {
         console.log('Удаляем событие из презентера', eventId);
         await this.handleDeleteEvent(eventId);
       }
@@ -50,15 +50,15 @@ export default class EventsPresenter {
 
     eventPresenter.init(this.#eventsListComponent.element);
     this.#eventPresenters.set(event.id, eventPresenter);
-}
+  }
 
   async handleDeleteEvent(eventId) {
     try {
-      await this.#boardModel.deleteEvent(eventId); // Ждем подтверждения от сервера
-      this._renderEvents(); // Обновляем список только после успеха
+      await this.#boardModel.deleteEvent(eventId);
+      this._renderEvents();
     } catch (error) {
       console.error('Ошибка при удалении события:', error);
-      throw error; // Пробрасываем ошибку для обработки в презентере события
+      throw error;
     }
   }
 
@@ -83,19 +83,18 @@ export default class EventsPresenter {
         message = 'Click New Event to create your first point';
     }
 
-    if (this.events.length === 0) {
-      this.#eventsListComponent.element.innerHTML = '';
+    if (this.#events.length === 0) {
       const noEventsView = new NoEventsView(message);
       render(noEventsView, this.#eventsListComponent.element);
     } else {
-      this.events.forEach((event) => this._renderEvent(event));
+      this.#events.forEach((event) => this._renderEvent(event));
     }
   }
 
   handleUserAction(actionType, payload) {
     switch (actionType) {
       case USER_ACTIONS.ADD_EVENT:
-        // Теперь обработка добавления полностью в HeaderPresenter
+        // Обработка добавления события теперь в HeaderPresenter
         break;
       case USER_ACTIONS.UPDATE_EVENT:
         this.#boardModel.updateEvent(payload)
@@ -104,11 +103,7 @@ export default class EventsPresenter {
         break;
       case USER_ACTIONS.DELETE_EVENT:
         return this.#boardModel.deleteEvent(payload)
-          .then(() => this._renderEvents())
-          .catch(() =>
-            // Ошибка уже обработана в презентере события
-            Promise.reject()
-          );
+          .then(() => this._renderEvents());
     }
   }
 
@@ -122,7 +117,7 @@ export default class EventsPresenter {
   }
 
   updateEvents(filteredEvents) {
-    this.events = filteredEvents;
+    this.#events = filteredEvents;
     this._renderEvents();
   }
 

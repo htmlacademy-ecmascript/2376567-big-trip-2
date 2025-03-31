@@ -113,15 +113,13 @@ export default class EventsApiService extends ApiService {
     }
 
     try {
-      const destinations = await this.getDestinations(); // Await the promise
-      console.log('Destinations loaded:', destinations);
+      const destinations = await this.getDestinations();
 
-      if (!destinations || !Array.isArray(destinations)) {
-        console.error('Пункты назначения не загружены или неверный формат данных');
-        return null;
-      }
+      // if (!destinations || !Array.isArray(destinations)) {
+      //   console.error('Пункты назначения не загружены или неверный формат данных');
+      //   return null;
+      // }
 
-      // Приводим оба ID к строке для сравнения
       const searchId = String(id).toLowerCase();
 
       return destinations.find((dest) => {
@@ -135,21 +133,20 @@ export default class EventsApiService extends ApiService {
   }
 
   #adaptToServer(point) {
-    // Получаем полный объект destination по ID
-    const destinationObj = this.getDestinationById(point.destination);
-
     const adaptedPoint = {
       ...point,
       base_price: point.basePrice,
       date_from: convertDateToISO(point.dateFrom),
       date_to: convertDateToISO(point.dateTo),
-      destination: destinationObj?.id || point.destination, // Используем UUID
       is_favorite: point.favorite,
       offers: point.offersId,
       type: point.type
     };
 
-    // Удаляем клиентские поля
+    if (point.id === null) {
+      delete adaptedPoint.id;
+    }
+
     delete adaptedPoint.basePrice;
     delete adaptedPoint.dateFrom;
     delete adaptedPoint.dateTo;

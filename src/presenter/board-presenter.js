@@ -7,12 +7,12 @@ import { USER_ACTIONS } from '../const.js';
 import { FILTERS } from '../const.js';
 
 export default class BoardPresenter {
-  #eventsListComponent = new EventsListView();
-  #boardContainer = null;
-  #boardModel = null;
-  #filterModel = null;
-  #eventsPresenter = null;
-  #addEventForm = null;
+  #eventsListComponent = new EventsListView(); // Компонент списка событий
+  #boardContainer = null; // Контейнер доски
+  #boardModel = null; // Модель доски
+  #filterModel = null; // Модель фильтров
+  #eventsPresenter = null; // Презентер событий
+  #addEventForm = null; // Форма добавления события
 
   constructor({ boardContainer, boardModel, filterModel }) {
     this.#boardContainer = boardContainer;
@@ -37,8 +37,8 @@ export default class BoardPresenter {
     sortPresenter.init();
   }
 
-  _renderEvents(eventsListComponent = this.#eventsListComponent) {
-    this.#eventsPresenter.init(eventsListComponent);
+  _renderEvents() {
+    this.#eventsPresenter.init(this.#eventsListComponent);
   }
 
   _handleEventChange = async (updatedEvent) => {
@@ -106,16 +106,13 @@ export default class BoardPresenter {
 
     switch (actionType) {
       case USER_ACTIONS.ADD_EVENT:
-        this.updateEvents(this.#boardModel.events);
-        break;
-      case USER_ACTIONS.UPDATE_EVENT:
-        this.#boardModel.events = this.#boardModel.events.map((event) =>
-          event.id === payload.id ? payload : event
-        );
         this.#eventsPresenter.updateEvent(payload);
         break;
+      case USER_ACTIONS.UPDATE_EVENT:
+        this.#eventsPresenter.updateEvent(payload); // Используем метод из EventsPresenter для добавления и обновления событий
+        break;
       case USER_ACTIONS.DELETE_EVENT:
-        this.#eventsPresenter.deleteEvent(payload);
+        this.#eventsPresenter.updateEvents(this.#boardModel.events); // Полное обновление списка событий после удаления
         break;
       default:
         console.log(`Необработанное событие: ${actionType}`);
@@ -131,4 +128,3 @@ export default class BoardPresenter {
     this.#eventsPresenter.resetAllViews();
   }
 }
-

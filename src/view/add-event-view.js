@@ -297,7 +297,7 @@ export default class AddEventView extends AbstractStatefulView {
     }
 
     const newEvent = {
-      id: null, // Сервер сгенерирует ID
+      id: null,
       basePrice: Number(formData.get('event-price')),
       dateFrom: convertDateToISO(formData.get('event-start-time')),
       dateTo: convertDateToISO(formData.get('event-end-time')),
