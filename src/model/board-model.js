@@ -61,15 +61,10 @@ export default class BoardModel extends Observable {
 
   async addEvent(event) {
     try {
-      // 1. Сначала отправляем на сервер
       const addedEvent = await this.eventsApiService.addPoint(event);
-
-      // 2. Только после успешного ответа обновляем модель
-
       this.#events = [addedEvent, ...this.#events];
-      console.log('событие обновлено');
       this._notify(USER_ACTIONS.ADD_EVENT, addedEvent);
-      return addedEvent; // Возвращаем промис
+      return addedEvent;
     } catch (err) {
       console.error('Add event error:', err);
       throw err; // Пробрасываем ошибку для обработки в презентере

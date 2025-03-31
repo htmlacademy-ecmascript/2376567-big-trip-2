@@ -29,7 +29,6 @@ export default class SortPresenter {
     }
 
     this.#boardModel.changeSortType(sortType);
-    console.log(this.#eventsPresenter.events);
     const sortedEvents = this._getSortedEvents(this.#eventsPresenter.events, sortType);
     this.#eventsPresenter.updateEvents(sortedEvents);
   };

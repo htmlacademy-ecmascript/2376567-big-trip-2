@@ -2,6 +2,7 @@ import EventPresenter from './event-presenter.js';
 import NoEventsView from '../view/no-events-view.js';
 import { render } from '../framework/render.js';
 import { USER_ACTIONS } from '../const.js';
+import { NO_EVENTS_MESSAGES } from '../const.js';
 
 export default class EventsPresenter {
   events = []; // Список событий
@@ -67,19 +68,19 @@ export default class EventsPresenter {
     let message = '';
     switch (this.#filterModel.filters.value) {
       case 'everything':
-        message = 'Click New Event to create your first point';
+        message = NO_EVENTS_MESSAGES.everything;
         break;
       case 'past':
-        message = 'There are no past events now';
+        message = NO_EVENTS_MESSAGES.past;
         break;
       case 'present':
-        message = 'There are no present events now';
+        message = NO_EVENTS_MESSAGES.present;
         break;
       case 'future':
-        message = 'There are no future events now';
+        message = NO_EVENTS_MESSAGES.future;
         break;
       default:
-        message = 'Click New Event to create your first point';
+        message = NO_EVENTS_MESSAGES.everything;
     }
 
     if (this.events.length === 0) {

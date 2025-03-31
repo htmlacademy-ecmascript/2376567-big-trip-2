@@ -68,4 +68,11 @@ const USER_ACTIONS = {
   SORT_CHANGED: 'SORT_CHANGED'
 };
 
-export { POINT_TYPES, FILTERS, SORT_BUTTONS, SORT_TYPES, DESTINATIONS, USER_ACTIONS };
+const NO_EVENTS_MESSAGES = {
+  everything: 'Click New Event to create your first point',
+  past: 'There are no past events now',
+  present: 'There are no present events now',
+  future: 'There are no future events now'
+};
+
+export { POINT_TYPES, FILTERS, SORT_BUTTONS, SORT_TYPES, DESTINATIONS, USER_ACTIONS, NO_EVENTS_MESSAGES };
