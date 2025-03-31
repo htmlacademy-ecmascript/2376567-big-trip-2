@@ -23,12 +23,13 @@ const getRandomUniqueInt = (min, max) => {
 
 const getDuration = (start, end) => {
   const duration = dayjs.duration(dayjs(end).diff(dayjs(start)));
-  if (duration.days()) {
+  if (duration.days() > 0) {
     return duration.format('DD[d] HH[h] mm[m]');
   }
-  if (duration.hours()) {
+  if (duration.hours() > 0) {
     return duration.format('HH[h] mm[m]');
   }
+  return duration.format('mm[m]');
 };
 
 function updateItem(items, update) {

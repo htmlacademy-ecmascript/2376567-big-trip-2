@@ -5,6 +5,7 @@ import SortPresenter from './sort-presenter.js';
 import EventsPresenter from './events-presenter.js';
 import { USER_ACTIONS } from '../const.js';
 import { FILTERS } from '../const.js';
+import { SORT_TYPES } from '../const.js';
 
 export default class BoardPresenter {
   #eventsListComponent = new EventsListView();
@@ -13,6 +14,7 @@ export default class BoardPresenter {
   #filterModel = null;
   #eventsPresenter = null;
   #addEventForm = null;
+  #sortPresenter = null;
 
   constructor({ boardContainer, boardModel, filterModel }) {
     this.#boardContainer = boardContainer;
@@ -28,13 +30,13 @@ export default class BoardPresenter {
   }
 
   _renderSort(eventsPresenter) {
-    const sortPresenter = new SortPresenter({
+    this.#sortPresenter = new SortPresenter({
       boardContainer: this.#boardContainer,
       eventsPresenter: eventsPresenter,
       boardModel: this.#boardModel,
     });
 
-    sortPresenter.init();
+    this.#sortPresenter.init();
   }
 
   _renderEvents() {
@@ -84,8 +86,23 @@ export default class BoardPresenter {
   }
 
   _handleFilterUpdate() {
+
     const filteredEvents = this.#filterModel.filterEvents(this.#boardModel.events);
-    this.#eventsPresenter.updateEvents(filteredEvents);
+
+    this.#boardModel.changeSortType(SORT_TYPES.DAY);
+
+    const sortedEvents = this.#sortPresenter._getSortedEvents(filteredEvents, SORT_TYPES.DAY);
+
+    this.#eventsPresenter.updateEvents(sortedEvents);
+
+    if (this.#sortPresenter) {
+      const dayInput = this.#sortPresenter.container.querySelector('#sort-day');
+      if (dayInput) {
+        dayInput.checked = true;
+        // dayInput.dispatchEvent(new Event('change'));
+      }
+    }
+
   }
 
   updateEvents(filteredEvents) {

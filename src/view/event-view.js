@@ -7,6 +7,8 @@ function createEventTemplate(event, destination, offer) {
   const { offers } = offer;
   const { name = '' } = destination || {};
 
+  console.log('getDuration',getDuration(dateFrom, dateTo));
+
   const getDateWithHour = (date) => dayjs(date).format('HH:mm');
 
   const createOffersTemplate = (offersArray) => offersArray.map((itemOffer) =>
