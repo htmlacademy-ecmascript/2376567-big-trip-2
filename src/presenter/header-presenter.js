@@ -35,7 +35,9 @@ export default class HeaderPresenter {
   }
 
   _handleNewEventClick() {
-    if (this.#isFormOpen) return;
+    if (this.#isFormOpen) {
+      return;
+    }
 
     const newEvent = {
       id: null,
@@ -55,20 +57,19 @@ export default class HeaderPresenter {
       offers: this.#boardModel.offers || [],
     });
 
-    // Новый обработчик отправки формы
     this.#newAddEventView.setFormSubmitHandler((newEventData) => {
-      this.#newAddEventView.setSaving(true); // Блокируем кнопку
+      this.#newAddEventView.setSaving(true);
 
       this.#boardModel.addEvent(newEventData)
         .then(() => {
-          this._closeForm(); // Закрываем форму только после успешного сохранения
+          this._closeForm();
         })
         .catch((err) => {
           console.error('Ошибка сохранения:', err);
-          this.#newAddEventView.shake(); // Показываем ошибку
+          this.#newAddEventView.shake();
         })
         .finally(() => {
-          this.#newAddEventView.setSaving(false); // Разблокируем кнопку
+          this.#newAddEventView.setSaving(false);
         });
     });
 

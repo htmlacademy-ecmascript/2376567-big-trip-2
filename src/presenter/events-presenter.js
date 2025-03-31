@@ -5,15 +5,15 @@ import { USER_ACTIONS } from '../const.js';
 import { NO_EVENTS_MESSAGES } from '../const.js';
 
 export default class EventsPresenter {
-  events = []; // Список событий
-  #destinations = []; // Список мест назначений
-  #offers = []; // Список предложений
-  #boardModel = null; // Модель доски
-  #eventsListComponent = null; // Компонент списка событий
-  #onDataChange = null; // Обработчик изменения данных
-  #eventPresenters = new Map(); // Карта презентеров событий
-  #filterModel = null; // Модель фильтров
-  #boardContainer = null; // Контейнер доски
+  events = [];
+  #destinations = [];
+  #offers = [];
+  #boardModel = null;
+  #eventsListComponent = null;
+  #onDataChange = null;
+  #eventPresenters = new Map();
+  #filterModel = null;
+  #boardContainer = null;
 
   constructor({ events, destinations, offers, boardModel, eventsListComponent, onDataChange, filterModel, boardContainer }) {
     this.events = events;
@@ -53,13 +53,9 @@ export default class EventsPresenter {
   }
 
   async handleDeleteEvent(eventId) {
-    try {
-      await this.#boardModel.deleteEvent(eventId);
-      this._renderEvents();
-    } catch (error) {
-      console.error('Ошибка при удалении события:', error);
-      throw error;
-    }
+    await this.#boardModel.deleteEvent(eventId);
+    this._renderEvents();
+
   }
 
   _renderEvents() {
@@ -94,7 +90,6 @@ export default class EventsPresenter {
   handleUserAction(actionType, payload) {
     switch (actionType) {
       case USER_ACTIONS.ADD_EVENT:
-        // Обработка добавления события теперь в HeaderPresenter
         break;
       case USER_ACTIONS.UPDATE_EVENT:
         this.#boardModel.updateEvent(payload)
@@ -122,7 +117,6 @@ export default class EventsPresenter {
   }
 
   resetAllViews() {
-    console.log('resetAllViews');
     this.#eventPresenters.forEach((presenter) => presenter.resetView());
   }
 }

@@ -27,7 +27,6 @@ export default class Observable {
    * @param {*} payload Дополнительная информация
    */
   _notify(event, payload) {
-    console.log(`Observers:`, event, payload);
     this.#observers.forEach((observer) => observer(event, payload));
   }
 }

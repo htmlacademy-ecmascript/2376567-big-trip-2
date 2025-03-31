@@ -1,9 +1,8 @@
 import dayjs from 'dayjs';
-import { POINT_TYPES, DESTINATIONS } from '../const.js';
+import { POINT_TYPES } from '../const.js';
 import AbstractStatefulView from '../framework/view/abstract-stateful-view.js';
 import flatpickr from 'flatpickr';
 import 'flatpickr/dist/flatpickr.min.css';
-import { nanoid } from 'nanoid';
 import { convertDateToISO } from '../utils';
 
 const DATE_FORMAT = 'DD/MM/YY HH:mm';
@@ -308,7 +307,6 @@ export default class AddEventView extends AbstractStatefulView {
         .map((input) => input.value),
     };
 
-    // Передаем данные через колбэк
     this._callback.formSubmit?.(newEvent);
   }
 

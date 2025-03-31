@@ -1,5 +1,5 @@
 import dayjs from 'dayjs';
-import { POINT_TYPES, DESTINATIONS } from '../const.js';
+import { POINT_TYPES } from '../const.js';
 import AbstractStatefulView from '../framework/view/abstract-stateful-view.js';
 import flatpickr from 'flatpickr';
 import 'flatpickr/dist/flatpickr.min.css';
@@ -138,8 +138,8 @@ export default class EditEventView extends AbstractStatefulView {
     this.#destinations = destinations;
     this.#offers = offers;
 
-    const selectedDestination = this.#destinations.find(d => d.id === event.destination) || {};
-    const extractDestinationNames = this.#destinations.map(item => item.name);
+    const selectedDestination = this.#destinations.find((d) => d.id === event.destination) || {};
+    const extractDestinationNames = this.#destinations.map((item) => item.name);
 
     this._setState({
       ...event,
@@ -175,47 +175,14 @@ export default class EditEventView extends AbstractStatefulView {
     }
   }
 
-  // _handleFormSubmit() {
-  //   console.log('!!!');
-  //   const formData = new FormData(this.element);
-  //   const destinationName = formData.get('event-destination');
-  //   const destination = this.#destinations.find((d) => d.name === destinationName);
-
-  //   if (!destination) {
-  //     this.shake();
-  //     return;
-  //   }
-
-  //   if (!formData.get('event-start-time') || !formData.get('event-end-time')) {
-  //     this.shake();
-  //     return;
-  //   }
-
-  //   const updatedEvent = {
-  //     id: this._state.id, // Сохраняем оригинальный ID
-  //     basePrice: Number(formData.get('event-price')),
-  //     dateFrom: convertDateToISO(formData.get('event-start-time')),
-  //     dateTo: convertDateToISO(formData.get('event-end-time')),
-  //     destination: destination.id,
-  //     favorite: this._state.favorite, // Сохраняем оригинальное значение
-  //     type: formData.get('event-type'),
-  //     offersId: Array.from(this.element.querySelectorAll('.event__offer-checkbox:checked'))
-  //       .map((input) => input.value),
-  //   };
-
-  //   console.log('Submitting event:', updatedEvent);
-  //   this._callback.formSubmit?.(updatedEvent); // Вызываем колбэк с обновленными данными
-  // }
-
   _handleFormSubmit() {
-    console.log('!!!');
     const formData = new FormData(this.element);
 
     const destinationName = formData.get('event-destination');
     const destination = this.#destinations.find((d) => d.name === destinationName);
 
     if (!destination) {
-      console.error('Destination not found');
+      console.error('События не найдены');
       this.shake();
       return;
     }
@@ -224,14 +191,13 @@ export default class EditEventView extends AbstractStatefulView {
     const validTypes = ['taxi', 'bus', 'train', 'flight', 'check-in', 'sightseeing', 'ship', 'drive', 'restaurant'];
 
     if (!validTypes.includes(type)) {
-      console.error('Invalid event type');
       this.shake();
       return;
     }
 
     const basePrice = Number(formData.get('event-price'));
     if (isNaN(basePrice) || basePrice < 1 || basePrice > 100000) {
-      console.error('Invalid base price');
+      console.error('Неверная цена');
       this.shake();
       return;
     }
@@ -240,7 +206,7 @@ export default class EditEventView extends AbstractStatefulView {
     const dateTo = convertDateToISO(formData.get('event-end-time'));
 
     if (!dateFrom || !dateTo || new Date(dateFrom) >= new Date(dateTo)) {
-      console.error('Invalid date range');
+      console.error('Неверная дата');
       this.shake();
       return;
     }
@@ -250,7 +216,7 @@ export default class EditEventView extends AbstractStatefulView {
     ).map((input) => input.value);
 
     if (offersId.length === 0) {
-      console.error('No offers selected');
+      console.error('Не выбран оффер');
       this.shake();
       return;
     }
@@ -265,8 +231,6 @@ export default class EditEventView extends AbstractStatefulView {
       type,
       offersId,
     };
-
-    console.log('Submitting event:', updatedEvent);
     this._callback.formSubmit?.(updatedEvent);
   }
 
@@ -375,9 +339,8 @@ export default class EditEventView extends AbstractStatefulView {
 
   _setFormSubmitHandler() {
     this.element.addEventListener('submit', (evt) => {
-      console.log('Form submit event triggered');
       evt.preventDefault();
-      this._handleFormSubmit(); // Вызываем _handleFormSubmit вместо this._callback.formSubmit
+      this._handleFormSubmit();
     });
   }
 
@@ -388,8 +351,6 @@ export default class EditEventView extends AbstractStatefulView {
         evt.preventDefault();
         if (typeof this._callback.deleteClick === 'function') {
           this._callback.deleteClick();
-        } else {
-          console.error('ошибка setCloseButtonClickHandler');
         }
       });
     }
@@ -466,7 +427,6 @@ export default class EditEventView extends AbstractStatefulView {
 
   setFormSubmitHandler(callback) {
     this._callback.formSubmit = callback;
-    // console.log(this._callback.formSubmit);
   }
 
   setEscKeyDownHandler(callback) {

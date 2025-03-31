@@ -7,12 +7,12 @@ import { USER_ACTIONS } from '../const.js';
 import { FILTERS } from '../const.js';
 
 export default class BoardPresenter {
-  #eventsListComponent = new EventsListView(); // Компонент списка событий
-  #boardContainer = null; // Контейнер доски
-  #boardModel = null; // Модель доски
-  #filterModel = null; // Модель фильтров
-  #eventsPresenter = null; // Презентер событий
-  #addEventForm = null; // Форма добавления события
+  #eventsListComponent = new EventsListView();
+  #boardContainer = null;
+  #boardModel = null;
+  #filterModel = null;
+  #eventsPresenter = null;
+  #addEventForm = null;
 
   constructor({ boardContainer, boardModel, filterModel }) {
     this.#boardContainer = boardContainer;
@@ -45,7 +45,7 @@ export default class BoardPresenter {
     try {
       const savedEvent = await this.#boardModel.updateEvent(updatedEvent);
       const modelEvents = this.#boardModel.events;
-      if (!modelEvents.some(e => e.id === savedEvent.id)) {
+      if (!modelEvents.some((e) => e.id === savedEvent.id)) {
         this.#eventsPresenter.updateEvents(modelEvents);
         return;
       }
@@ -102,20 +102,16 @@ export default class BoardPresenter {
   }
 
   _handleModelChange(actionType, payload) {
-    console.log('Model change:', actionType, payload);
-
     switch (actionType) {
       case USER_ACTIONS.ADD_EVENT:
         this.#eventsPresenter.updateEvent(payload);
         break;
       case USER_ACTIONS.UPDATE_EVENT:
-        this.#eventsPresenter.updateEvent(payload); // Используем метод из EventsPresenter для добавления и обновления событий
+        this.#eventsPresenter.updateEvent(payload);
         break;
       case USER_ACTIONS.DELETE_EVENT:
-        this.#eventsPresenter.updateEvents(this.#boardModel.events); // Полное обновление списка событий после удаления
+        this.#eventsPresenter.updateEvents(this.#boardModel.events);
         break;
-      default:
-        console.log(`Необработанное событие: ${actionType}`);
     }
   }
 

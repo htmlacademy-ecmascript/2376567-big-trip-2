@@ -2,7 +2,6 @@ import EventView from '../view/event-view.js';
 import EditEventView from '../view/edit-event-view.js';
 import { replace } from '../framework/render.js';
 import { convertDateToISO } from '../utils.js';
-import { USER_ACTIONS } from '../const.js';
 
 export default class EventPresenter {
   #event = null;
@@ -73,15 +72,14 @@ export default class EventPresenter {
       this.#offerAll
     );
 
-    // Устанавливаем один обработчик отправки формы
     this.#editEventView.setFormSubmitHandler((updatedEvent) => {
       this.#editEventView.setSaving(true);
 
       this.#onDataChange(updatedEvent)
         .then(() => {
           this.update(updatedEvent,
-            this.#destinationAll.find(d => d.id === updatedEvent.destination),
-            this.#offerAll.find(o => o.type === updatedEvent.type)
+            this.#destinationAll.find((d) => d.id === updatedEvent.destination),
+            this.#offerAll.find((o) => o.type === updatedEvent.type)
           );
           this._replaceFormWithEvent();
         })
@@ -98,24 +96,11 @@ export default class EventPresenter {
     replace(this.#editEventView, this.#eventView);
   }
 
-  // _replaceFormWithEvent() {
-  //   if (!this.#editEventView) {
-  //     return;
-  //   }
-  //   const parent = this.#editEventView.element.parentElement;
-  //   if (parent) {
-  //     parent.replaceChild(this.#eventView.element, this.#editEventView.element);
-  //   }
-  //   this.#editEventView.removeElement();
-  //   this.#editEventView = null;
-  // }
-
   _replaceFormWithEvent() {
     if (!this.#editEventView) {
       return;
     }
 
-    // Добавьте проверку на существование родительского элемента
     if (!this.#eventView.element.parentElement && this.#editEventView.element.parentElement) {
       this.#editEventView.element.parentElement.appendChild(this.#eventView.element);
     } else if (this.#editEventView.element.parentElement) {
@@ -128,32 +113,26 @@ export default class EventPresenter {
 
   async _deleteFormEvent() {
     if (!this.#editEventView) {
-      console.error('Форма не инициализирована');
       return;
     }
 
-    console.log('Удаление для события с ID', this.#event.id);
     this.#editEventView.setDeleting(true);
 
     try {
-      // Сохраняем ссылку на форму перед удалением
       const editView = this.#editEventView;
       editView.setDeleting(true);
 
       await this.#onDelete(this.#event.id);
 
-      // Проверяем, существует ли ещё форма перед обновлением
       if (this.#editEventView) {
         this._replaceFormWithEvent();
       }
     } catch (error) {
-      console.error('Ошибка удаления', error);
-      // Проверяем, существует ли ещё форма перед показом ошибки
+      console.log('Ошибка удаления', error);
       if (this.#editEventView) {
         this.#editEventView.shake();
       }
     } finally {
-      // Проверяем, существует ли ещё форма перед разблокировкой
       if (this.#editEventView) {
         this.#editEventView.setDeleting(false);
       }
@@ -161,7 +140,6 @@ export default class EventPresenter {
   }
 
   async _handleFormSubmit() {
-    console.log('!!!');
     const formData = new FormData(this.#editEventView.element);
     const destinationName = formData.get('event-destination');
 
@@ -190,9 +168,6 @@ export default class EventPresenter {
     this.#onDataChange(updatedEvent)
       .then(() => {
         this._replaceFormWithEvent();
-      })
-      .catch((err) => {
-        console.log('Ошибка onDataChange:', err);
       });
   }
 }

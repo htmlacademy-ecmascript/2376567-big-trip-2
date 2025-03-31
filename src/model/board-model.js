@@ -31,7 +31,6 @@ export default class BoardModel extends Observable {
 
   async loadEvents() {
     const events = await this.eventsApiService.points;
-    console.log(events);
     this.#events = events;
     this._notify(USER_ACTIONS.EVENTS_LOADED, events);
   }
@@ -60,62 +59,38 @@ export default class BoardModel extends Observable {
   }
 
   async addEvent(event) {
-    try {
-      const addedEvent = await this.eventsApiService.addPoint(event);
-      this.#events = [addedEvent, ...this.#events];
-      this._notify(USER_ACTIONS.ADD_EVENT, addedEvent);
-      return addedEvent;
-    } catch (err) {
-      console.error('Add event error:', err);
-      throw err; // Пробрасываем ошибку для обработки в презентере
-    }
+    const addedEvent = await this.eventsApiService.addPoint(event);
+    this.#events = [addedEvent, ...this.#events];
+    this._notify(USER_ACTIONS.ADD_EVENT, addedEvent);
+    return addedEvent;
   }
 
   async updateEvent(event) {
 
-    try {
-      // Проверяем обязательные поля перед отправкой
-      if (!event?.id || !event.destination) {
-        throw new Error('Invalid event data');
-      }
+    const updatedEvent = await this.eventsApiService.updatePoint(event);
+    const index = this.#events.findIndex((e) => e.id === updatedEvent.id);
 
-      const updatedEvent = await this.eventsApiService.updatePoint(event);
-      const index = this.#events.findIndex(e => e.id === updatedEvent.id);
+    this.#events = [
+      ...this.#events.slice(0, index),
+      updatedEvent,
+      ...this.#events.slice(index + 1)
+    ];
 
-      if (index === -1) {
-        throw new Error('Event not found in local model');
-      }
-
-      this.#events = [
-        ...this.#events.slice(0, index),
-        updatedEvent,
-        ...this.#events.slice(index + 1)
-      ];
-
-      this._notify(USER_ACTIONS.UPDATE_EVENT, updatedEvent);
-      return updatedEvent;
-    } catch (error) {
-      console.error('Update event error:', error);
-      throw error;
-    }
+    this._notify(USER_ACTIONS.UPDATE_EVENT, updatedEvent);
+    return updatedEvent;
   }
 
   async deleteEvent(eventId) {
-    try {
-      // Не ожидаем данных в ответе, только статус
-      await this.eventsApiService.deletePoint(eventId);
 
-      const index = this.#events.findIndex((e) => e.id === eventId);
-      if (index !== -1) {
-        this.#events = [
-          ...this.#events.slice(0, index),
-          ...this.#events.slice(index + 1)
-        ];
-        this._notify(USER_ACTIONS.DELETE_EVENT, eventId);
-      }
-    } catch (error) {
-      console.error('Ошибка при удалении события', error);
-      throw error;
+    await this.eventsApiService.deletePoint(eventId);
+
+    const index = this.#events.findIndex((e) => e.id === eventId);
+    if (index !== -1) {
+      this.#events = [
+        ...this.#events.slice(0, index),
+        ...this.#events.slice(index + 1)
+      ];
+      this._notify(USER_ACTIONS.DELETE_EVENT, eventId);
     }
   }
 
