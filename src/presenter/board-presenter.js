@@ -20,7 +20,7 @@ export default class BoardPresenter {
     this.#filterModel = filterModel;
 
     this.#filterModel.addObserver((filter) => this._handleFilterUpdate(filter));
-    this.#boardModel.addObserver(this._handleModelChange.bind(this));
+    this.#boardModel.addObserver((actionType, payload) => this._handleModelChange(actionType, payload));
   }
 
   init() {
@@ -43,11 +43,15 @@ export default class BoardPresenter {
 
   _handleEventChange = async (updatedEvent) => {
     try {
-      await this.#boardModel.updateEvent(updatedEvent);
-      this.#eventsPresenter.updateEvent(updatedEvent);
-    } catch (err) {
-      console.log('Ошибка при обновлении события', err);
-      // throw err;
+      const savedEvent = await this.#boardModel.updateEvent(updatedEvent);
+      const modelEvents = this.#boardModel.events;
+      if (!modelEvents.some(e => e.id === savedEvent.id)) {
+        this.#eventsPresenter.updateEvents(modelEvents);
+        return;
+      }
+      this.#eventsPresenter.updateEvent(savedEvent);
+    } catch {
+      this.#eventsPresenter.updateEvents(this.#boardModel.events);
     }
   };
 
@@ -97,36 +101,26 @@ export default class BoardPresenter {
     render(this.#addEventForm, this.#eventsListComponent.element, 'afterbegin');
   }
 
-  _handleModelChange(actionType) {
+  _handleModelChange(actionType, payload) {
+    console.log('Model change:', actionType, payload);
+
     switch (actionType) {
       case USER_ACTIONS.ADD_EVENT:
-      case USER_ACTIONS.UPDATE_EVENT:
-      case USER_ACTIONS.DELETE_EVENT:
-        console.log('произошло обновление');
         this.updateEvents(this.#boardModel.events);
+        break;
+      case USER_ACTIONS.UPDATE_EVENT:
+        this.#boardModel.events = this.#boardModel.events.map((event) =>
+          event.id === payload.id ? payload : event
+        );
+        this.#eventsPresenter.updateEvent(payload);
+        break;
+      case USER_ACTIONS.DELETE_EVENT:
+        this.#eventsPresenter.deleteEvent(payload);
         break;
       default:
         console.log(`Необработанное событие: ${actionType}`);
     }
   }
-
-  // _handleModelChange(actionType, payload) {
-  //   console.log('Model change:', actionType, payload);
-
-  //   switch (actionType) {
-  //     case USER_ACTIONS.ADD_EVENT:
-  //       this.updateEvents(this.#boardModel.events);
-  //       break;
-  //     case USER_ACTIONS.UPDATE_EVENT:
-  //       this.#eventsPresenter.updateEvent(payload);
-  //       break;
-  //     case USER_ACTIONS.DELETE_EVENT:
-  //       this.#eventsPresenter.deleteEvent(payload);
-  //       break;
-  //     default:
-  //       console.log(`Необработанное событие: ${actionType}`);
-  //   }
-  // }
 
   resetAllViews() {
     this.#eventsPresenter.resetAllViews();

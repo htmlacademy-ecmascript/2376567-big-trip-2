@@ -20,19 +20,31 @@ export default class EventsApiService extends ApiService {
       .then((points) => points.map(this.#adaptToClient));
   }
 
-  async updatePoint(point) {
-    const adaptedPoint = this.#adaptToServer(point);
+  // async updatePoint(point) {
+  //   const adaptedPoint = this.#adaptToServer(point);
 
+  //   const response = await this._load({
+  //     url: `points/${point.id}`,
+  //     method: Method.PUT,
+  //     body: JSON.stringify(adaptedPoint),
+  //     headers: new Headers({ 'Content-Type': 'application/json' }),
+  //   });
+
+  //   const parsedResponse = await ApiService.parseResponse(response);
+
+  //   return this.#adaptToClient(parsedResponse);
+  // }
+
+  async updatePoint(point) {
+    // ТОЛЬКО PUT запрос, без предварительных GET
     const response = await this._load({
       url: `points/${point.id}`,
-      method: Method.PUT,
-      body: JSON.stringify(adaptedPoint),
-      headers: new Headers({ 'Content-Type': 'application/json' }),
+      method: 'PUT',
+      body: JSON.stringify(this.#adaptToServer(point)),
+      headers: new Headers({'Content-Type': 'application/json'})
     });
 
-    const parsedResponse = await ApiService.parseResponse(response);
-
-    return this.#adaptToClient(parsedResponse);
+    return ApiService.parseResponse(response);
   }
 
   async addPoint(point) {

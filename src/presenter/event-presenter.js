@@ -79,17 +79,14 @@ export default class EventPresenter {
 
       this.#onDataChange(updatedEvent)
         .then(() => {
-          this._replaceFormWithEvent();
           this.update(updatedEvent,
             this.#destinationAll.find(d => d.id === updatedEvent.destination),
             this.#offerAll.find(o => o.type === updatedEvent.type)
           );
+          this._replaceFormWithEvent();
         })
         .catch(() => {
           this.#editEventView.shake();
-        })
-        .finally(() => {
-          this.#editEventView.setSaving(false);
         });
     });
 
@@ -101,14 +98,30 @@ export default class EventPresenter {
     replace(this.#editEventView, this.#eventView);
   }
 
+  // _replaceFormWithEvent() {
+  //   if (!this.#editEventView) {
+  //     return;
+  //   }
+  //   const parent = this.#editEventView.element.parentElement;
+  //   if (parent) {
+  //     parent.replaceChild(this.#eventView.element, this.#editEventView.element);
+  //   }
+  //   this.#editEventView.removeElement();
+  //   this.#editEventView = null;
+  // }
+
   _replaceFormWithEvent() {
     if (!this.#editEventView) {
       return;
     }
-    const parent = this.#editEventView.element.parentElement;
-    if (parent) {
-      parent.replaceChild(this.#eventView.element, this.#editEventView.element);
+
+    // Добавьте проверку на существование родительского элемента
+    if (!this.#eventView.element.parentElement && this.#editEventView.element.parentElement) {
+      this.#editEventView.element.parentElement.appendChild(this.#eventView.element);
+    } else if (this.#editEventView.element.parentElement) {
+      this.#editEventView.element.parentElement.replaceChild(this.#eventView.element, this.#editEventView.element);
     }
+
     this.#editEventView.removeElement();
     this.#editEventView = null;
   }

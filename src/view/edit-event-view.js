@@ -466,7 +466,7 @@ export default class EditEventView extends AbstractStatefulView {
 
   setFormSubmitHandler(callback) {
     this._callback.formSubmit = callback;
-    console.log(this._callback.formSubmit);
+    // console.log(this._callback.formSubmit);
   }
 
   setEscKeyDownHandler(callback) {
