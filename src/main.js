@@ -7,7 +7,7 @@ import FailedLoadView from './view/failed-load-view.js';
 import { render } from './framework/render.js';
 import LoadingView from './view/loading-view.js';
 
-const AUTHORIZATION = 'Basic GS2sfS44wcl1sa2G';
+const AUTHORIZATION = 'Basic GS2sfS44wcl1sa2';
 const END_POINT = 'https://23.objects.htmlacademy.pro/big-trip';
 
 const siteMainElement = document.querySelector('.trip-events');

@@ -21,15 +21,39 @@ const getRandomUniqueInt = (min, max) => {
   };
 };
 
+// const getDuration = (start, end) => {
+//   const duration = dayjs.duration(dayjs(end).diff(dayjs(start)));
+
+//   // Получаем общее количество дней (включая дни из месяцев и лет)
+//   const totalDays = Math.floor(duration.asDays());
+//   const remainingHours = duration.hours();
+//   const remainingMinutes = duration.minutes();
+
+//   let result = '';
+
+//   if (totalDays > 0) {
+//     result += `${totalDays}D `;
+//   }
+
+//   // Всегда показываем часы и минуты с ведущими нулями
+//   result += `${remainingHours.toString().padStart(2, '0')}H ${remainingMinutes.toString().padStart(2, '0')}M`;
+
+//   return result;
+// };
+
 const getDuration = (start, end) => {
   const duration = dayjs.duration(dayjs(end).diff(dayjs(start)));
-  if (duration.days() > 0) {
-    return duration.format('DD[d] HH[h] mm[m]');
-  }
-  if (duration.hours() > 0) {
-    return duration.format('HH[h] mm[m]');
-  }
-  return duration.format('mm[m]');
+
+  const totalDays = Math.floor(duration.asDays());
+  const remainingHours = duration.hours();
+  const remainingMinutes = duration.minutes();
+
+  // Форматируем с ведущими нулями и заглавными буквами
+  const daysStr = `${totalDays.toString().padStart(2, '0') }D`;
+  const hoursStr = `${remainingHours.toString().padStart(2, '0') }H`;
+  const minutesStr = `${remainingMinutes.toString().padStart(2, '0') }M`;
+
+  return `${daysStr} ${hoursStr} ${minutesStr}`;
 };
 
 function updateItem(items, update) {
