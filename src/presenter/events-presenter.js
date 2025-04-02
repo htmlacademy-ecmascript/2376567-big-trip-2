@@ -54,6 +54,7 @@ export default class EventsPresenter {
 
   async handleDeleteEvent(eventId) {
     this.#eventsListComponent.element.innerHTML = '';
+    await this.#boardModel.deleteEvent(eventId);
     this._renderEvents();
 
   }

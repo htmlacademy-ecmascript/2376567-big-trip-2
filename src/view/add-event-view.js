@@ -316,6 +316,7 @@ export default class AddEventView extends AbstractStatefulView {
 
   setEscKeyDownHandler(callback) {
     this._callback.escKeyDown = callback;
+    console.log('!!!');
     document.addEventListener('keydown', (evt) => {
       if (evt.key === 'Escape' || evt.key === 'Esc') {
         evt.preventDefault();

@@ -74,6 +74,7 @@ export default class HeaderPresenter {
     });
 
     this.#newAddEventView.setCancelClickHandler(() => this._closeForm());
+    this.#newAddEventView.setEscKeyDownHandler(() => this._closeForm());
     this.#boardPresenter.showAddEventForm(this.#newAddEventView);
     this.#isFormOpen = true;
     this.#tripMainView.blockNewEventButton();
