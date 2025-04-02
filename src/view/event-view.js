@@ -7,8 +7,6 @@ function createEventTemplate(event, destination, offer) {
   const { offers } = offer;
   const { name = '' } = destination || {};
 
-  console.log('getDuration',getDuration(dateFrom, dateTo));
-
   const getDateWithHour = (date) => dayjs(date).format('HH:mm');
 
   const createOffersTemplate = (offersArray) => offersArray.map((itemOffer) =>
@@ -23,7 +21,7 @@ function createEventTemplate(event, destination, offer) {
 
   return (`
     <div class="event">
-       <time class="event__date" datetime="${dateFrom}">${dayjs(dateFrom).format('DD MMM')}</time>
+       <time class="event__date" datetime="${dateFrom}">${dayjs(dateFrom).format('MMM DD')}</time>
       <div class="event__type">
         <img class="event__type-icon" width="42" height="42" src="img/icons/${type}.png" alt="Event type icon">
       </div>

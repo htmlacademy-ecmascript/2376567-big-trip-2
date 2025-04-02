@@ -1,11 +1,11 @@
 import Observable from '../framework/observable.js';
-import { USER_ACTIONS } from '../const.js';
+import { USER_ACTIONS, SORT_TYPES } from '../const.js';
 
 export default class BoardModel extends Observable {
   #events = [];
   #allOffers = [];
   #allDestinations = [];
-  #currentSortType = 'day';
+  #currentSortType = SORT_TYPES.DAY;
 
   constructor({ eventsApiService }) {
     super();

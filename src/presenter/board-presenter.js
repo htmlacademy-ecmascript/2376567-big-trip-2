@@ -26,6 +26,11 @@ export default class BoardPresenter {
 
   init() {
     this._renderBoard();
+    const sortedEvents = this.#sortPresenter._getSortedEvents(
+      this.#boardModel.events,
+      SORT_TYPES.DAY
+    );
+    this.#eventsPresenter.updateEvents(sortedEvents);
   }
 
   _renderSort(eventsPresenter) {
@@ -74,11 +79,6 @@ export default class BoardPresenter {
 
     this.#eventsPresenter = new EventsPresenter(eventsPresenterParams);
     this._renderSort(this.#eventsPresenter);
-
-    // if (events.length === 0) {
-    //   const noPointView = new NoPointView();
-    //   render(noPointView, this.#boardContainer);
-    // }
 
     render(this.#eventsListComponent, this.#boardContainer);
     this._renderEvents();
