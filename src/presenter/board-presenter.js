@@ -5,6 +5,7 @@ import EventsPresenter from './events-presenter.js';
 import { USER_ACTIONS } from '../const.js';
 import { FILTERS } from '../const.js';
 import { SORT_TYPES } from '../const.js';
+import NoEventsView from '../view/no-events-view.js';
 
 export default class BoardPresenter {
   #eventsListComponent = new EventsListView();

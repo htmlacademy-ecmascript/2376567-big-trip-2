@@ -54,7 +54,6 @@ export default class EventsPresenter {
 
   async handleDeleteEvent(eventId) {
     this.#eventsListComponent.element.innerHTML = '';
-    await this.#boardModel.deleteEvent(eventId);
     this._renderEvents();
 
   }
@@ -94,7 +93,6 @@ export default class EventsPresenter {
       noEventsElement.remove();
     }
   }
-
 
   handleUserAction(actionType, payload) {
     switch (actionType) {
