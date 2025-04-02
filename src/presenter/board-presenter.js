@@ -1,5 +1,4 @@
 import EventsListView from '../view/events-list-view.js';
-import NoPointView from '../view/no-point-view.js';
 import { render } from '../framework/render.js';
 import SortPresenter from './sort-presenter.js';
 import EventsPresenter from './events-presenter.js';
@@ -76,10 +75,10 @@ export default class BoardPresenter {
     this.#eventsPresenter = new EventsPresenter(eventsPresenterParams);
     this._renderSort(this.#eventsPresenter);
 
-    if (events.length === 0) {
-      const noPointView = new NoPointView();
-      render(noPointView, this.#boardContainer);
-    }
+    // if (events.length === 0) {
+    //   const noPointView = new NoPointView();
+    //   render(noPointView, this.#boardContainer);
+    // }
 
     render(this.#eventsListComponent, this.#boardContainer);
     this._renderEvents();
@@ -110,6 +109,7 @@ export default class BoardPresenter {
   }
 
   showAddEventForm(addEventView) {
+    this.#eventsPresenter.removeNoEventsView();
     if (this.#addEventForm) {
       this.#addEventForm.removeElement();
     }

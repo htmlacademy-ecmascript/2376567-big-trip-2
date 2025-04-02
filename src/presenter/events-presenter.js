@@ -53,14 +53,14 @@ export default class EventsPresenter {
   }
 
   async handleDeleteEvent(eventId) {
+    this.#eventsListComponent.element.innerHTML = '';
     await this.#boardModel.deleteEvent(eventId);
     this._renderEvents();
 
   }
 
   _renderEvents() {
-    this.#eventsListComponent.element.innerHTML = '';
-
+    this.removeNoEventsView();
     let message = '';
     switch (this.#filterModel.filters.value) {
       case 'everything':
@@ -83,9 +83,18 @@ export default class EventsPresenter {
       const noEventsView = new NoEventsView(message);
       render(noEventsView, this.#eventsListComponent.element);
     } else {
+      this.#eventsListComponent.element.innerHTML = '';
       this.events.forEach((event) => this._renderEvent(event));
     }
   }
+
+  removeNoEventsView() {
+    const noEventsElement = this.#eventsListComponent.element.querySelector('.trip-events__msg');
+    if (noEventsElement) {
+      noEventsElement.remove();
+    }
+  }
+
 
   handleUserAction(actionType, payload) {
     switch (actionType) {
@@ -117,6 +126,7 @@ export default class EventsPresenter {
   }
 
   resetAllViews() {
+    this.removeNoEventsView();
     this.#eventPresenters.forEach((presenter) => presenter.resetView());
   }
 }
