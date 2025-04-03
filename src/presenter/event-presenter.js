@@ -62,56 +62,6 @@ export default class EventPresenter {
     }
   }
 
-  // _replaceEventWithForm() {
-  //   this.#onFormOpen();
-
-  //   this.#editEventView = new EditEventView(
-  //     this.#event,
-  //     this.#destination,
-  //     this.#offer,
-  //     this.#destinationAll,
-  //     this.#offerAll
-  //   );
-
-  //   this.#editEventView.setFormSubmitHandler((updatedEvent) => {
-  //     this.#editEventView.setSaving(true);
-
-  //     this.#onDataChange(updatedEvent)
-  //       .then(() => {
-  //         this.update(updatedEvent,
-  //           this.#destinationAll.find((d) => d.id === updatedEvent.destination),
-  //           this.#offerAll.find((o) => o.type === updatedEvent.type)
-  //         );
-  //         this._replaceFormWithEvent();
-  //       })
-  //       .catch(() => {
-  //         this.#editEventView.shake();
-  //       });
-  //   });
-
-  //   this.#editEventView.setDeleteClickHandler(() => this._deleteFormEvent());
-  //   this.#editEventView.setEscKeyDownHandler(() => this._replaceFormWithEvent());
-  //   this.#editEventView.setCloseButtonClickHandler(() => this._deleteFormEvent());
-  //   this.#editEventView.setRollupButtonClickHandler(() => this._replaceFormWithEvent());
-
-  //   replace(this.#editEventView, this.#eventView);
-  // }
-
-  // _replaceFormWithEvent() {
-  //   if (!this.#editEventView) {
-  //     return;
-  //   }
-
-  //   if (!this.#eventView.element.parentElement && this.#editEventView.element.parentElement) {
-  //     this.#editEventView.element.parentElement.appendChild(this.#eventView.element);
-  //   } else if (this.#editEventView.element.parentElement) {
-  //     this.#editEventView.element.parentElement.replaceChild(this.#eventView.element, this.#editEventView.element);
-  //   }
-
-  //   this.#editEventView.removeElement();
-  //   this.#editEventView = null;
-  // }
-
   _replaceEventWithForm() {
     // Уведомляем внешние компоненты об открытии формы
     this.#onFormOpen();
