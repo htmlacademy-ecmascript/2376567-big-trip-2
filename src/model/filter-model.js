@@ -22,19 +22,32 @@ export default class FilterModel extends Observable {
   }
 
   filterEvents(events) {
-    const currentFilter = this.#filters;
-
-    switch (currentFilter.value) {
-      case 'everything':
-        return events;
-      case 'future':
-        return events.filter((event) => dayjs(event.dateFrom).isAfter(dayjs()));
-      case 'present':
-        return events.filter((event) => dayjs().isBetween(dayjs(event.dateFrom), dayjs(event.dateTo)));
-      case 'past':
-        return events.filter((event) => dayjs(event.dateFrom).isBefore(dayjs()));
-      default:
-        return events;
+    if (!Array.isArray(events)) {
+      return [];
     }
+
+    const now = dayjs();
+    const currentFilter = this.#filters.value;
+
+    return events.filter((event) => {
+      if (!event?.dateFrom || !event?.dateTo) {
+        return false;
+      }
+
+      const start = dayjs(event.dateFrom);
+      const end = dayjs(event.dateTo);
+
+      switch (currentFilter) {
+        case 'future':
+          return start.isAfter(now, 'minute');
+        case 'present':
+          return now.isAfter(start, 'minute') && now.isBefore(end, 'minute');
+        case 'past':
+          return end.isBefore(now, 'minute');
+        case 'everything':
+        default:
+          return true;
+      }
+    });
   }
 }

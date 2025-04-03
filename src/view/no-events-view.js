@@ -1,4 +1,3 @@
-import { render } from '../framework/render.js';
 import AbstractView from '../framework/view/abstract-view.js';
 
 export default class NoEventsView extends AbstractView {
@@ -13,9 +12,5 @@ export default class NoEventsView extends AbstractView {
     return `
       <p class="trip-events__msg">${this.#message}</p>
     `;
-  }
-
-  render(container) {
-    render(this.template, container);
   }
 }

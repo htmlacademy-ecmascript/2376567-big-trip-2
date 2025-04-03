@@ -1,10 +1,10 @@
 import EventsListView from '../view/events-list-view.js';
-import { NoPointView } from '../view/no-point-view.js';
 import { render } from '../framework/render.js';
 import SortPresenter from './sort-presenter.js';
 import EventsPresenter from './events-presenter.js';
 import { USER_ACTIONS } from '../const.js';
 import { FILTERS } from '../const.js';
+import { SORT_TYPES } from '../const.js';
 
 export default class BoardPresenter {
   #eventsListComponent = new EventsListView();
@@ -13,6 +13,7 @@ export default class BoardPresenter {
   #filterModel = null;
   #eventsPresenter = null;
   #addEventForm = null;
+  #sortPresenter = null;
 
   constructor({ boardContainer, boardModel, filterModel }) {
     this.#boardContainer = boardContainer;
@@ -20,29 +21,44 @@ export default class BoardPresenter {
     this.#filterModel = filterModel;
 
     this.#filterModel.addObserver((filter) => this._handleFilterUpdate(filter));
-    this.#boardModel.addObserver(this._handleModelChange.bind(this));
+    this.#boardModel.addObserver((actionType, payload) => this._handleModelChange(actionType, payload));
   }
 
   init() {
     this._renderBoard();
+    const sortedEvents = this.#sortPresenter._getSortedEvents(
+      this.#boardModel.events,
+      SORT_TYPES.DAY
+    );
+    this.#eventsPresenter.updateEvents(sortedEvents);
   }
 
   _renderSort(eventsPresenter) {
-    const sortPresenter = new SortPresenter({
+    this.#sortPresenter = new SortPresenter({
       boardContainer: this.#boardContainer,
       eventsPresenter: eventsPresenter,
+      boardModel: this.#boardModel,
     });
 
-    sortPresenter.init();
+    this.#sortPresenter.init();
   }
 
-  _renderEvents(eventsListComponent = this.#eventsListComponent) {
-    this.#eventsPresenter.init(eventsListComponent);
+  _renderEvents() {
+    this.#eventsPresenter.init(this.#eventsListComponent);
   }
 
-  _handleEventChange = (updatedEvent) => {
-    this.#boardModel.updateEvent(updatedEvent);
-    this.#eventsPresenter.updateEvent(updatedEvent);
+  _handleEventChange = async (updatedEvent) => {
+    try {
+      const savedEvent = await this.#boardModel.updateEvent(updatedEvent);
+      const modelEvents = this.#boardModel.events;
+      if (!modelEvents.some((e) => e.id === savedEvent.id)) {
+        this.#eventsPresenter.updateEvents(modelEvents);
+        return;
+      }
+      this.#eventsPresenter.updateEvent(savedEvent);
+    } catch {
+      this.#eventsPresenter.updateEvents(this.#boardModel.events);
+    }
   };
 
   _renderBoard() {
@@ -64,18 +80,28 @@ export default class BoardPresenter {
     this.#eventsPresenter = new EventsPresenter(eventsPresenterParams);
     this._renderSort(this.#eventsPresenter);
 
-    if (events.length === 0) {
-      const noPointView = new NoPointView();
-      render(noPointView, this.#boardContainer);
-    }
-
     render(this.#eventsListComponent, this.#boardContainer);
     this._renderEvents();
   }
 
   _handleFilterUpdate() {
+
     const filteredEvents = this.#filterModel.filterEvents(this.#boardModel.events);
-    this.#eventsPresenter.updateEvents(filteredEvents);
+
+    this.#boardModel.changeSortType(SORT_TYPES.DAY);
+
+    const sortedEvents = this.#sortPresenter._getSortedEvents(filteredEvents, SORT_TYPES.DAY);
+
+    this.#eventsPresenter.updateEvents(sortedEvents);
+
+    if (this.#sortPresenter) {
+      const dayInput = this.#sortPresenter.container.querySelector('#sort-day');
+      if (dayInput) {
+        dayInput.checked = true;
+        // dayInput.dispatchEvent(new Event('change'));
+      }
+    }
+
   }
 
   updateEvents(filteredEvents) {
@@ -83,22 +109,26 @@ export default class BoardPresenter {
   }
 
   showAddEventForm(addEventView) {
+    this.#eventsPresenter.removeNoEventsView();
     if (this.#addEventForm) {
       this.#addEventForm.removeElement();
     }
     this.#addEventForm = addEventView;
-    render(this.#addEventForm, this.#eventsListComponent.element, 'afterbegin');
     this.#eventsPresenter.resetAllViews();
+    render(this.#addEventForm, this.#eventsListComponent.element, 'afterbegin');
   }
 
-  _handleModelChange(actionType) {
+  _handleModelChange(actionType, payload) {
     switch (actionType) {
       case USER_ACTIONS.ADD_EVENT:
-      case USER_ACTIONS.UPDATE_EVENT:
-      case USER_ACTIONS.DELETE_EVENT:
-        this.updateEvents(this.#boardModel.events);
+        this.#eventsPresenter.updateEvent(payload);
         break;
-      default:
+      case USER_ACTIONS.UPDATE_EVENT:
+        this.#eventsPresenter.updateEvent(payload);
+        break;
+      case USER_ACTIONS.DELETE_EVENT:
+        this.#eventsPresenter.updateEvents(this.#boardModel.events);
+        break;
     }
   }
 
@@ -111,4 +141,3 @@ export default class BoardPresenter {
     this.#eventsPresenter.resetAllViews();
   }
 }
-

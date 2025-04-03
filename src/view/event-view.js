@@ -1,11 +1,15 @@
 import AbstractView from '../framework/view/abstract-view.js';
-import {getDuration } from '../utils';
+import {getDuration} from '../utils';
 import dayjs from 'dayjs';
 
 function createEventTemplate(event, destination, offer) {
-  const { basePrice, type, favorite, dateFrom, dateTo } = event;
-  const { offers } = offer;
+  const { basePrice, type, favorite, dateFrom, dateTo, offersId } = event;
+  const { offers: typeOffers } = offer || {};
   const { name = '' } = destination || {};
+
+  const selectedOffers = typeOffers?.filter((offerItem) =>
+    offersId?.includes(offerItem.id)
+  ) || [];
 
   const getDateWithHour = (date) => dayjs(date).format('HH:mm');
 
@@ -21,7 +25,7 @@ function createEventTemplate(event, destination, offer) {
 
   return (`
     <div class="event">
-       <time class="event__date" datetime="${dateFrom}">${dayjs(dateFrom).format('DD MMM')}</time>
+      <time class="event__date" datetime="${dateFrom}">${dayjs(dateFrom).format('MMM DD')}</time>
       <div class="event__type">
         <img class="event__type-icon" width="42" height="42" src="img/icons/${type}.png" alt="Event type icon">
       </div>
@@ -38,9 +42,10 @@ function createEventTemplate(event, destination, offer) {
         &euro;&nbsp;<span class="event__price-value">${basePrice}</span>
       </p>
       <h4 class="visually-hidden">Offers:</h4>
-      <ul class="event__selected-offers">
-        ${createOffersTemplate(offers)}
-      </ul>
+      ${selectedOffers.length > 0 ?
+      `<ul class="event__selected-offers">
+          ${createOffersTemplate(selectedOffers)}
+        </ul>` : ''}
       <button class="event__favorite-btn ${favorite ? 'event__favorite-btn--active' : ''}" type="button">
         <span class="visually-hidden">Add to favorite</span>
         <svg class="event__favorite-icon" width="28" height="28" viewBox="0 0 28 28">

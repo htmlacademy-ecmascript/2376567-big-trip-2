@@ -2,11 +2,12 @@ import EventPresenter from './event-presenter.js';
 import NoEventsView from '../view/no-events-view.js';
 import { render } from '../framework/render.js';
 import { USER_ACTIONS } from '../const.js';
+import { NO_EVENTS_MESSAGES } from '../const.js';
 
 export default class EventsPresenter {
-  events = null;
-  #destinations = null;
-  #offers = null;
+  events = [];
+  #destinations = [];
+  #offers = [];
   #boardModel = null;
   #eventsListComponent = null;
   #onDataChange = null;
@@ -42,53 +43,70 @@ export default class EventsPresenter {
       offerAll: this.#offers,
       onFormOpen: this.resetAllViews.bind(this),
       onUserAction: this.handleUserAction.bind(this),
+      onDelete: async (eventId) => {
+        await this.handleDeleteEvent(eventId);
+      }
     });
 
     eventPresenter.init(this.#eventsListComponent.element);
     this.#eventPresenters.set(event.id, eventPresenter);
   }
 
-  _renderEvents() {
+  async handleDeleteEvent(eventId) {
     this.#eventsListComponent.element.innerHTML = '';
+    await this.#boardModel.deleteEvent(eventId);
+    this._renderEvents();
 
+  }
+
+  _renderEvents() {
+    this.removeNoEventsView();
     let message = '';
     switch (this.#filterModel.filters.value) {
       case 'everything':
-        message = 'Click New Event to create your first point';
+        message = NO_EVENTS_MESSAGES.everything;
         break;
       case 'past':
-        message = 'There are no past events now';
+        message = NO_EVENTS_MESSAGES.past;
         break;
       case 'present':
-        message = 'There are no present events now';
+        message = NO_EVENTS_MESSAGES.present;
         break;
       case 'future':
-        message = 'There are no future events now';
+        message = NO_EVENTS_MESSAGES.future;
         break;
       default:
-        message = 'Click New Event to create your first point';
+        message = NO_EVENTS_MESSAGES.everything;
     }
 
     if (this.events.length === 0) {
-      this.#eventsListComponent.element.innerHTML = '';
       const noEventsView = new NoEventsView(message);
       render(noEventsView, this.#eventsListComponent.element);
     } else {
+      this.#eventsListComponent.element.innerHTML = '';
       this.events.forEach((event) => this._renderEvent(event));
+    }
+  }
+
+  removeNoEventsView() {
+    const noEventsElement = this.#eventsListComponent.element.querySelector('.trip-events__msg');
+    if (noEventsElement) {
+      noEventsElement.remove();
     }
   }
 
   handleUserAction(actionType, payload) {
     switch (actionType) {
       case USER_ACTIONS.ADD_EVENT:
-        this.#boardModel.addEvent(payload);
         break;
       case USER_ACTIONS.UPDATE_EVENT:
-        this.#boardModel.updateEvent(payload);
+        this.#boardModel.updateEvent(payload)
+          .then(() => this._renderEvents())
+          .catch(() => this._renderEvents());
         break;
       case USER_ACTIONS.DELETE_EVENT:
-        this.#boardModel.deleteEvent(payload);
-        break;
+        return this.#boardModel.deleteEvent(payload)
+          .then(() => this._renderEvents());
     }
   }
 
@@ -107,6 +125,7 @@ export default class EventsPresenter {
   }
 
   resetAllViews() {
+    this.removeNoEventsView();
     this.#eventPresenters.forEach((presenter) => presenter.resetView());
   }
 }

@@ -4,18 +4,19 @@ import { SORT_TYPES } from '../const.js';
 import dayjs from 'dayjs';
 
 export default class SortPresenter {
-  #container = null;
+  container = null;
   #eventsPresenter = null;
-  #currentSortType = SORT_TYPES.DAY;
+  #boardModel = null;
 
-  constructor({ boardContainer, eventsPresenter }) {
-    this.#container = boardContainer;
+  constructor({ boardContainer, eventsPresenter, boardModel }) {
+    this.container = boardContainer;
     this.#eventsPresenter = eventsPresenter;
+    this.#boardModel = boardModel;
   }
 
   init() {
     const sortView = new SortView();
-    render(sortView, this.#container);
+    render(sortView, this.container);
 
     sortView.setSortInputСhangeHandler(this._handleSortTypeChange);
   }
@@ -23,12 +24,11 @@ export default class SortPresenter {
   _handleSortTypeChange = (evt) => {
     const sortType = evt.target.dataset.sortType;
 
-    if (this.#currentSortType === sortType) {
+    if (this.#boardModel.getCurrentSortType() === sortType) {
       return;
     }
 
-    this.#currentSortType = sortType;
-
+    this.#boardModel.changeSortType(sortType);
     const sortedEvents = this._getSortedEvents(this.#eventsPresenter.events, sortType);
     this.#eventsPresenter.updateEvents(sortedEvents);
   };

@@ -2,6 +2,7 @@ import { render } from '../framework/render.js';
 import TripMainView from '../view/trip-main-veiw.js';
 import FiltersPresenter from './filters-presenter.js';
 import AddEventView from '../view/add-event-view.js';
+import { USER_ACTIONS } from '../const.js';
 
 export default class HeaderPresenter {
   #filterModel = null;
@@ -17,9 +18,12 @@ export default class HeaderPresenter {
     this.#headerContainer = headerContainer;
     this.#filterModel = filterModel;
     this.#filtersPresenter = new FiltersPresenter({ filterModel: this.#filterModel });
-    // this.#filterModel.addObserver((filter) => this._handleFilterUpdate(filter));
     this.#boardPresenter = boardPresenter;
     this.#boardModel = boardModel;
+
+    this.#filterModel.addObserver(this._handleFilterChange.bind(this));
+
+    this.#boardModel.addObserver(this._handleSortChange.bind(this));
   }
 
   init() {
@@ -35,12 +39,6 @@ export default class HeaderPresenter {
       return;
     }
 
-    const destinations = this.#boardModel.destinations;
-    const offers = this.#boardModel.offers;
-
-    this.#boardPresenter.resetAllViews();
-    this.#boardPresenter.resetFiltersAndSorting();
-
     const newEvent = {
       id: null,
       type: 'flight',
@@ -54,17 +52,31 @@ export default class HeaderPresenter {
     this.#newAddEventView = new AddEventView({
       event: newEvent,
       destination: null,
-      offer: offers.find((offer) => offer.type === newEvent.type) || null,
-      destinations: destinations || [],
-      offers: offers || [],
+      offer: this.#boardModel.offers.find((o) => o.type === newEvent.type) || null,
+      destinations: this.#boardModel.destinations || [],
+      offers: this.#boardModel.offers || [],
     });
 
-    this.#newAddEventView.setFormSubmitHandler((newEvn) => this._handleFormSubmit(newEvn));
-    this.#newAddEventView.setCancelClickHandler(() => this._closeForm());
+    this.#newAddEventView.setFormSubmitHandler((newEventData) => {
+      this.#newAddEventView.setSaving(true);
 
+      this.#boardModel.addEvent(newEventData)
+        .then(() => {
+          this._closeForm();
+        })
+        .catch((err) => {
+          console.log('Ошибка сохранения:', err);
+          this.#newAddEventView.shake();
+        })
+        .finally(() => {
+          this.#newAddEventView.setSaving(false);
+        });
+    });
+
+    this.#newAddEventView.setCancelClickHandler(() => this._closeForm());
+    this.#newAddEventView.setEscKeyDownHandler(() => this._closeForm());
     this.#boardPresenter.showAddEventForm(this.#newAddEventView);
     this.#isFormOpen = true;
-
     this.#tripMainView.blockNewEventButton();
   }
 
@@ -88,7 +100,15 @@ export default class HeaderPresenter {
     this.#boardPresenter.updateEvents(this.#boardModel.events);
   }
 
-  // _handleFilterUpdate(filter) {
-  //   console.log('HeaderPresenter: Фильтр изменен:', filter);
-  // }
+  _handleFilterChange() {
+    if (this.#isFormOpen) {
+      this._closeForm();
+    }
+  }
+
+  _handleSortChange(event) {
+    if (event === USER_ACTIONS.SORT_CHANGED && this.#isFormOpen) {
+      this._closeForm();
+    }
+  }
 }
