@@ -1,3 +1,4 @@
+/* eslint-disable camelcase */
 import ApiService from '../framework/api-service';
 import { convertDateToISO } from '../utils';
 
@@ -20,31 +21,19 @@ export default class EventsApiService extends ApiService {
       .then((points) => points.map(this.#adaptToClient));
   }
 
-  // async updatePoint(point) {
-  //   const adaptedPoint = this.#adaptToServer(point);
-
-  //   const response = await this._load({
-  //     url: `points/${point.id}`,
-  //     method: Method.PUT,
-  //     body: JSON.stringify(adaptedPoint),
-  //     headers: new Headers({ 'Content-Type': 'application/json' }),
-  //   });
-
-  //   const parsedResponse = await ApiService.parseResponse(response);
-
-  //   return this.#adaptToClient(parsedResponse);
-  // }
-
   async updatePoint(point) {
-    // ТОЛЬКО PUT запрос, без предварительных GET
+    const adaptedPoint = this.#adaptToServer(point);
+    console.log('Отправлено на сервер', adaptedPoint);
     const response = await this._load({
       url: `points/${point.id}`,
       method: 'PUT',
-      body: JSON.stringify(this.#adaptToServer(point)),
+      body: JSON.stringify(adaptedPoint),
       headers: new Headers({'Content-Type': 'application/json'})
     });
 
-    return ApiService.parseResponse(response);
+    const parsedResponse = await ApiService.parseResponse(response);
+    console.log('Принято с сервера', parsedResponse);
+    return this.#adaptToClient(parsedResponse);
   }
 
   async addPoint(point) {
@@ -66,7 +55,6 @@ export default class EventsApiService extends ApiService {
       method: Method.DELETE
     });
 
-    // Если сервер возвращает пустой ответ, не пытаемся парсить JSON
     if (response.status === 204 || response.status === 200) {
       return null;
     }
@@ -97,7 +85,6 @@ export default class EventsApiService extends ApiService {
       type: point.type
     };
 
-    // Удаляем серверные поля
     delete adaptedPoint.base_price;
     delete adaptedPoint.date_from;
     delete adaptedPoint.date_to;
@@ -115,19 +102,16 @@ export default class EventsApiService extends ApiService {
     try {
       const destinations = await this.getDestinations();
 
-      // if (!destinations || !Array.isArray(destinations)) {
-      //   console.error('Пункты назначения не загружены или неверный формат данных');
-      //   return null;
-      // }
-
       const searchId = String(id).toLowerCase();
 
       return destinations.find((dest) => {
-        if (!dest?.id) { return false; }
+        if (!dest?.id) {
+          return false;
+        }
         return String(dest.id).toLowerCase() === searchId;
       });
     } catch (error) {
-      console.error('Error fetching destinations:', error);
+      console.log('Ошибка получения пунктов назанчения', error);
       return null;
     }
   }

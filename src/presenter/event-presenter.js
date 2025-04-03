@@ -2,6 +2,7 @@ import EventView from '../view/event-view.js';
 import EditEventView from '../view/edit-event-view.js';
 import { replace } from '../framework/render.js';
 import { convertDateToISO } from '../utils.js';
+import { POINT_TYPES } from '../const.js';
 
 export default class EventPresenter {
   #event = null;
@@ -144,31 +145,58 @@ export default class EventPresenter {
     const destinationName = formData.get('event-destination');
 
     const destination = this.#destinationAll.find((dest) => dest.name === destinationName);
-
     if (!destination) {
       this.#editEventView.shake();
-      throw new Error('Destination не найдены');
+      throw new Error('Нет такого пункта назначения');
     }
 
-    const dateFromString = formData.get('event-start-time');
-    const dateToString = formData.get('event-end-time');
+    const dateFrom = convertDateToISO(formData.get('event-start-time'));
+    const dateTo = convertDateToISO(formData.get('event-end-time'));
+
+    if (new Date(dateFrom) >= new Date(dateTo)) {
+      this.#editEventView.shake();
+      throw new Error('Конеченая дата не может быть раньше начальной');
+    }
+
+    const checkedOffers = Array.from(
+      this.#editEventView.element.querySelectorAll('.event__offer-checkbox:checked')
+    );
+
+    const offersId = checkedOffers.map((input) => {
+      const value = input.value;
+      return isNaN(value) ? value : Number(value);
+    });
+
+    const eventType = formData.get('event-type');
+    if (!POINT_TYPES.includes(eventType)) {
+      this.#editEventView.shake();
+    }
+
+    const basePrice = Number(formData.get('event-price'));
+    if (isNaN(basePrice) || basePrice <= 0) {
+      this.#editEventView.shake();
+      throw new Error('Только положительные числа');
+    }
 
     const updatedEvent = {
+      ...this.#event,
       id: this.#event.id,
-      type: formData.get('event-type'),
-      dateFrom: convertDateToISO(dateFromString),
-      dateTo: convertDateToISO(dateToString),
-      basePrice: Number(formData.get('event-price')),
+      type: eventType,
+      dateFrom,
+      dateTo,
+      basePrice,
       destination: destination.id,
-      offersId: Array.from(this.#editEventView.element.querySelectorAll('.event__offer-checkbox:checked'))
-        .map((input) => Number(input.value)),
-      favorite: this.#event.favorite,
+      offersId,
     };
 
-    this.#onDataChange(updatedEvent)
-      .then(() => {
-        this._replaceFormWithEvent();
-      });
+    try {
+      await this.#onDataChange(updatedEvent);
+      this._replaceFormWithEvent();
+    } catch (error) {
+      this.#editEventView.shake();
+      console.log('Ошибка сохранания', error);
+      throw error;
+    }
   }
 }
 

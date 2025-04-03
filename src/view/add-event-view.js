@@ -289,22 +289,37 @@ export default class AddEventView extends AbstractStatefulView {
     const formData = new FormData(this.element);
     const destinationName = formData.get('event-destination');
     const destination = this.#destinations.find((d) => d.name === destinationName);
+    const checkedOffers = Array.from(
+      this.element.querySelectorAll('.event__offer-checkbox:checked')
+    );
 
-    if (!destination) {
+    const offersId = checkedOffers.map((input) => {
+      const value = input.value;
+      return value && !isNaN(value) ? Number(value) : value;
+    });
+
+    const dateFrom = convertDateToISO(formData.get('event-start-time'));
+    const dateTo = convertDateToISO(formData.get('event-end-time'));
+
+    if (new Date(dateFrom) >= new Date(dateTo)) {
       this.shake();
       return;
     }
 
+    const basePrice = Number(formData.get('event-price'));
+    if (isNaN(basePrice) || basePrice <= 0) {
+      this.shake();
+      return;
+    }
     const newEvent = {
       id: null,
-      basePrice: Number(formData.get('event-price')),
-      dateFrom: convertDateToISO(formData.get('event-start-time')),
-      dateTo: convertDateToISO(formData.get('event-end-time')),
+      basePrice,
+      dateFrom,
+      dateTo,
       destination: destination.id,
       favorite: false,
       type: formData.get('event-type'),
-      offersId: Array.from(this.element.querySelectorAll('.event__offer-checkbox:checked'))
-        .map((input) => input.value),
+      offersId,
     };
 
     this._callback.formSubmit?.(newEvent);

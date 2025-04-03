@@ -65,7 +65,7 @@ export default class HeaderPresenter {
           this._closeForm();
         })
         .catch((err) => {
-          console.error('Ошибка сохранения:', err);
+          console.log('Ошибка сохранения:', err);
           this.#newAddEventView.shake();
         })
         .finally(() => {

@@ -12,7 +12,8 @@ const createOffersTemplate = (offers, selectedOffers = []) => offers.map((offer)
     <input class="event__offer-checkbox visually-hidden"
            id="event-offer-${offer.id}"
            type="checkbox"
-           name="event-offer-${offer.id}"
+           name="event-offer"
+           value="${offer.id}"  // Используем ID оффера как значение
            ${selectedOffers.includes(offer.id) ? 'checked' : ''}>
     <label class="event__offer-label" for="event-offer-${offer.id}">
       <span class="event__offer-title">${offer.title}</span>
@@ -182,7 +183,7 @@ export default class EditEventView extends AbstractStatefulView {
     const destination = this.#destinations.find((d) => d.name === destinationName);
 
     if (!destination) {
-      console.error('События не найдены');
+      console.log('События не найдены');
       this.shake();
       return;
     }
@@ -197,7 +198,7 @@ export default class EditEventView extends AbstractStatefulView {
 
     const basePrice = Number(formData.get('event-price'));
     if (isNaN(basePrice) || basePrice < 1 || basePrice > 100000) {
-      console.error('Неверная цена');
+      console.log('Неверная цена');
       this.shake();
       return;
     }
@@ -206,7 +207,7 @@ export default class EditEventView extends AbstractStatefulView {
     const dateTo = convertDateToISO(formData.get('event-end-time'));
 
     if (!dateFrom || !dateTo || new Date(dateFrom) >= new Date(dateTo)) {
-      console.error('Неверная дата');
+      console.log('Неверная дата');
       this.shake();
       return;
     }
@@ -214,12 +215,6 @@ export default class EditEventView extends AbstractStatefulView {
     const offersId = Array.from(
       this.element.querySelectorAll('.event__offer-checkbox:checked')
     ).map((input) => input.value);
-
-    if (offersId.length === 0) {
-      console.error('Не выбран оффер');
-      this.shake();
-      return;
-    }
 
     const updatedEvent = {
       id: this._state.id,
