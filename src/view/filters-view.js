@@ -22,6 +22,13 @@ export default class FilterView extends AbstractView {
     super();
   }
 
+  updateSelectedFilter(filterValue) {
+    const inputs = this.element.querySelectorAll('.trip-filters__filter-input');
+    inputs.forEach((input) => {
+      input.checked = (input.value === filterValue);
+    });
+  }
+
   get template() {
     return createFilterTemplate(FILTERS);
   }

@@ -8,17 +8,25 @@ dayjs.extend(isBetween);
 export default class FiltersPresenter {
   #filterModel = null;
   #container = null;
+  #filterView = null;
 
   constructor({ filterModel }) {
     this.#filterModel = filterModel;
+    this.#filterModel.addObserver(this._handleModelReset.bind(this));
     // this.#filterModel.addObserver(this._handleModelChange.bind(this));
   }
 
   init() {
     this.#container = document.body.querySelector('.trip-controls__filters');
-    const filterView = new FilterView(this.#filterModel.filters);
-    render(filterView, this.#container);
-    filterView.setFiltersClickHandler(this._handleFilterChange.bind(this));
+    this.#filterView = new FilterView(this.#filterModel.filters);
+    render(this.#filterView, this.#container);
+    this.#filterView.setFiltersClickHandler(this._handleFilterChange.bind(this));
+  }
+
+  _handleModelReset(event, payload) {
+    if (event === 'FILTER_RESET') {
+      this.#filterView.updateSelectedFilter(payload.value);
+    }
   }
 
   _handleFilterChange(filter) {

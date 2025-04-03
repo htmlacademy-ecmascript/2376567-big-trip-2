@@ -21,6 +21,13 @@ export default class SortPresenter {
     sortView.setSortInputСhangeHandler(this._handleSortTypeChange);
   }
 
+  resetSorting() {
+    const dayInput = this.container.querySelector('#sort-day');
+    if (dayInput) {
+      dayInput.checked = true;
+    }
+  }
+
   _handleSortTypeChange = (evt) => {
     const sortType = evt.target.dataset.sortType;
 

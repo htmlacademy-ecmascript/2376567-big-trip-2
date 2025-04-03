@@ -136,8 +136,22 @@ export default class BoardPresenter {
     this.#eventsPresenter.resetAllViews();
   }
 
+  // resetFiltersAndSorting() {
+  //   this.#filterModel.setFilter(FILTERS[0]);
+  //   this.#eventsPresenter.resetAllViews();
+  // }
+
   resetFiltersAndSorting() {
-    this.#filterModel.setFilter(FILTERS[0]);
+    // Сбрасываем фильтры через модель
+    this.#filterModel.resetFilters();
+    // Сбрасываем сортировку
+    this.#boardModel.changeSortType(SORT_TYPES.DAY);
+    this.#sortPresenter.resetSorting();
+    // Сбрасываем все открытые формы
     this.#eventsPresenter.resetAllViews();
+    // Обновляем список событий
+    const filteredEvents = this.#filterModel.filterEvents(this.#boardModel.events);
+    this.#eventsPresenter.updateEvents(filteredEvents);
   }
+
 }
