@@ -13,7 +13,7 @@ const createOffersTemplate = (offers, selectedOffers = []) => offers.map((offer)
            id="event-offer-${offer.id}"
            type="checkbox"
            name="event-offer"
-           value="${offer.id}"
+           value="${offer.id}"  // Используем ID оффера как значение
            ${selectedOffers.includes(offer.id) ? 'checked' : ''}>
     <label class="event__offer-label" for="event-offer-${offer.id}">
       <span class="event__offer-title">${offer.title}</span>
@@ -110,27 +110,23 @@ const createEditEventTemplate = (state) => {
           </section>
         `)}
 
-        <!-- Изменено: Секция destination теперь будет скрываться если нет описания -->
-        ${renderSectionIf(description || pictures?.length, `
-          <section class="event__section event__section--destination">
-            <h3 class="event__section-title event__section-title--destination">Destination</h3>
-            ${description ? `<p class="event__destination-description">${description}</p>` : ''}
-            ${renderSectionIf(pictures?.length, `
-              <div class="event__photos-container">
-                <div class="event__photos-tape">
-                  ${pictures.map((photo) => `
-                    <img class="event__photo" src="${photo.src}" alt="${photo.description}">
-                  `).join('')}
-                </div>
+        <section class="event__section event__section--destination">
+          <h3 class="event__section-title event__section-title--destination">Destination</h3>
+          <p class="event__destination-description">${description}</p>
+          ${renderSectionIf(pictures.length, `
+            <div class="event__photos-container">
+              <div class="event__photos-tape">
+                ${pictures.map((photo) => `
+                  <img class="event__photo" src="${photo.src}" alt="${photo.description}">
+                `).join('')}
               </div>
-            `)}
-          </section>
-        `)}
+            </div>
+          `)}
+        </section>
       </section>
     </form>
   `;
 };
-
 
 export default class EditEventView extends AbstractStatefulView {
   #destinations = null;
@@ -273,11 +269,7 @@ export default class EditEventView extends AbstractStatefulView {
 
   _handleDestinationInput(destinationName) {
     if (!destinationName.trim()) {
-      this._setState({
-        description: '',
-        pictures: []
-      });
-      return;
+      return this._updateDestinationDetails({ description: '', pictures: [] });
     }
 
     const selectedDestination = this.#destinations.find((d) =>
@@ -285,25 +277,23 @@ export default class EditEventView extends AbstractStatefulView {
     );
 
     if (selectedDestination) {
+      this._updateDestinationDetails(selectedDestination);
       this._setState({
         destinationName: selectedDestination.name,
         destination: selectedDestination.id,
-        description: selectedDestination.description || '',
-        pictures: selectedDestination.pictures || []
-      });
-    } else {
-      this._setState({
-        description: '',
-        pictures: []
+        description: selectedDestination.description,
+        pictures: selectedDestination.pictures
       });
     }
   }
 
   _updateDestinationDetails(destination) {
-    this._setState({
-      description: destination.description || '',
-      pictures: destination.pictures || []
-    });
+    this._updateElementText('.event__destination-description', destination.description || '');
+    this._updateElementHTML(
+      '.event__photos-tape',
+      destination.pictures?.map((p) => `<img class="event__photo" src="${p.src}" alt="${p.description}">`).join('') || ''
+    );
+    this._toggleElementVisibility('.event__section--destination', !!destination.description);
   }
 
   _setDatepicker() {

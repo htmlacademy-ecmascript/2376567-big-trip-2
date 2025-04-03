@@ -39,6 +39,8 @@ export default class HeaderPresenter {
       return;
     }
 
+    this.#boardPresenter.resetFiltersAndSorting();
+
     const newEvent = {
       id: null,
       type: 'flight',
