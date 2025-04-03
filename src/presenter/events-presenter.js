@@ -30,7 +30,32 @@ export default class EventsPresenter {
     this._renderEvents();
   }
 
+  // _renderEvent(event) {
+  //   const destination = this.#boardModel.getDestinationsById(event.destination);
+  //   const offer = this.#boardModel.getOffersByType(event.type);
+
+  //   const eventPresenter = new EventPresenter({
+  //     event,
+  //     destination,
+  //     offer,
+  //     onDataChange: this.#onDataChange,
+  //     destinationAll: this.#destinations,
+  //     offerAll: this.#offers,
+  //     onFormOpen: this.resetAllViews.bind(this),
+  //     onUserAction: this.handleUserAction.bind(this),
+  //     onDelete: async (eventId) => {
+  //       await this.handleDeleteEvent(eventId);
+  //     }
+  //   });
+
+  //   eventPresenter.init(this.#eventsListComponent.element);
+  //   this.#eventPresenters.set(event.id, eventPresenter);
+  // }
+
   _renderEvent(event) {
+    const liElement = document.createElement('li');
+    liElement.classList.add('trip-events__item');
+
     const destination = this.#boardModel.getDestinationsById(event.destination);
     const offer = this.#boardModel.getOffersByType(event.type);
 
@@ -48,7 +73,8 @@ export default class EventsPresenter {
       }
     });
 
-    eventPresenter.init(this.#eventsListComponent.element);
+    eventPresenter.init(liElement);
+    this.#eventsListComponent.element.appendChild(liElement);
     this.#eventPresenters.set(event.id, eventPresenter);
   }
 
@@ -59,32 +85,66 @@ export default class EventsPresenter {
 
   }
 
+  // _renderEvents() {
+  //   this.removeNoEventsView();
+  //   let message = '';
+  //   switch (this.#filterModel.filters.value) {
+  //     case 'everything':
+  //       message = NO_EVENTS_MESSAGES.everything;
+  //       break;
+  //     case 'past':
+  //       message = NO_EVENTS_MESSAGES.past;
+  //       break;
+  //     case 'present':
+  //       message = NO_EVENTS_MESSAGES.present;
+  //       break;
+  //     case 'future':
+  //       message = NO_EVENTS_MESSAGES.future;
+  //       break;
+  //     default:
+  //       message = NO_EVENTS_MESSAGES.everything;
+  //   }
+
+  //   if (this.events.length === 0) {
+  //     const noEventsView = new NoEventsView(message);
+  //     render(noEventsView, this.#eventsListComponent.element);
+  //   } else {
+  //     this.#eventsListComponent.element.innerHTML = '';
+  //     this.events.forEach((event) => this._renderEvent(event));
+  //   }
+  // }
+
   _renderEvents() {
     this.removeNoEventsView();
-    let message = '';
-    switch (this.#filterModel.filters.value) {
-      case 'everything':
-        message = NO_EVENTS_MESSAGES.everything;
-        break;
-      case 'past':
-        message = NO_EVENTS_MESSAGES.past;
-        break;
-      case 'present':
-        message = NO_EVENTS_MESSAGES.present;
-        break;
-      case 'future':
-        message = NO_EVENTS_MESSAGES.future;
-        break;
-      default:
-        message = NO_EVENTS_MESSAGES.everything;
-    }
+
+    // Получаем сообщение для пустого списка
+    const message = this.#getNoEventsMessage();
 
     if (this.events.length === 0) {
       const noEventsView = new NoEventsView(message);
       render(noEventsView, this.#eventsListComponent.element);
-    } else {
-      this.#eventsListComponent.element.innerHTML = '';
-      this.events.forEach((event) => this._renderEvent(event));
+      return;
+    }
+
+    // Очищаем список перед рендерингом
+    this.#eventsListComponent.element.innerHTML = '';
+
+    // Рендерим каждый ивент в своем li-элементе
+    this.events.forEach((event) => this._renderEvent(event));
+  }
+
+  // Вспомогательный метод для получения сообщения при пустом списке
+  #getNoEventsMessage() {
+    switch (this.#filterModel.filters.value) {
+      case 'past':
+        return NO_EVENTS_MESSAGES.past;
+      case 'present':
+        return NO_EVENTS_MESSAGES.present;
+      case 'future':
+        return NO_EVENTS_MESSAGES.future;
+      case 'everything':
+      default:
+        return NO_EVENTS_MESSAGES.everything;
     }
   }
 
