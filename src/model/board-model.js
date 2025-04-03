@@ -14,7 +14,7 @@ export default class BoardModel extends Observable {
 
   set events(events) {
     this.#events = events;
-    this._notify(USER_ACTIONS.EVENTS_LOADED, events);
+    // this._notify(USER_ACTIONS.EVENTS_LOADED, events);
   }
 
   get events() {
@@ -32,7 +32,7 @@ export default class BoardModel extends Observable {
   async loadEvents() {
     const events = await this.eventsApiService.points;
     this.#events = events;
-    this._notify(USER_ACTIONS.EVENTS_LOADED, events);
+    // this._notify(USER_ACTIONS.EVENTS_LOADED, events);
   }
 
   async loadOffers() {
