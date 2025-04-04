@@ -69,10 +69,10 @@ export default class HeaderPresenter {
         .catch((err) => {
           console.log('Ошибка сохранения:', err);
           this.#newAddEventView.shake();
-        })
-        .finally(() => {
-          this.#newAddEventView.setSaving(false);
         });
+      // .finally(() => {
+      //   this.#newAddEventView.setSaving(false);
+      // });
     });
 
     this.#newAddEventView.setCancelClickHandler(() => this._closeForm());

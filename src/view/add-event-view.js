@@ -128,13 +128,15 @@ export default class AddEventView extends AbstractStatefulView {
     this.#offers = offers || [];
 
     const extractDestinationNames = this.#destinations.map((item) => item.name);
+    const currentOffers = this.#offers.find((o) => o.type === event.type)?.offers || [];
 
     this._setState({
       ...event,
       destination: event.destination,
-      offers: offer?.offers || [],
-      description: destinations.find((d) => d.id === event.destination)?.description || '',
-      pictures: destinations.find((d) => d.id === event.destination)?.pictures || [],
+      offers: currentOffers,
+      offersId: [],
+      description: this.#destinations.find((d) => d.id === event.destination)?.description || '',
+      pictures: this.#destinations.find((d) => d.id === event.destination)?.pictures || [],
       destinationName: destination?.name || '',
       destinationNames: extractDestinationNames
     });
@@ -169,14 +171,29 @@ export default class AddEventView extends AbstractStatefulView {
         const newType = evt.target.value;
         const newOffers = this.#offers.find((o) => o.type === newType)?.offers || [];
 
+        const checkedOffers = Array.from(
+          this.element.querySelectorAll('.event__offer-checkbox:checked')
+        ).map((input) => input.value);
+
         this._setState({
           type: newType,
-          offersId: [],
+          offersId: checkedOffers.filter((id) =>
+            newOffers.some((offer) => offer.id === id)
+          ),
           offers: newOffers
         });
 
         this._updateElementText('.event__type-output', newType);
         this._updateElementAttribute('.event__type-icon', 'src', `img/icons/${newType}.png`);
+        const offersContainer = this.element.querySelector('.event__available-offers');
+        if (offersContainer) {
+          offersContainer.innerHTML = createOffersTemplate(newOffers, this._state.offersId);
+        }
+        this._toggleElementVisibility(
+          '.event__section--offers',
+          newOffers.length > 0
+        );
+
         this._closeTypeDropdown();
       }
     );
@@ -293,6 +310,11 @@ export default class AddEventView extends AbstractStatefulView {
       this.element.querySelectorAll('.event__offer-checkbox:checked')
     );
 
+    if (!destinationName) {
+      this.shake();
+      return;
+    }
+
     const offersId = checkedOffers.map((input) => {
       const value = input.value;
       return value && !isNaN(value) ? Number(value) : value;
@@ -311,6 +333,7 @@ export default class AddEventView extends AbstractStatefulView {
       this.shake();
       return;
     }
+
     const newEvent = {
       id: null,
       basePrice,
