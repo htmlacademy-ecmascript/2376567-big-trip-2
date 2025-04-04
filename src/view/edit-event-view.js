@@ -246,14 +246,29 @@ export default class EditEventView extends AbstractStatefulView {
         const newType = evt.target.value;
         const newOffers = this.#offers.find((o) => o.type === newType)?.offers || [];
 
+        const checkedOffers = Array.from(
+          this.element.querySelectorAll('.event__offer-checkbox:checked')
+        ).map((input) => input.value);
+
         this._setState({
           type: newType,
-          offersId: [],
+          offersId: checkedOffers.filter((id) =>
+            newOffers.some((offer) => offer.id === id)
+          ),
           offers: newOffers
         });
 
         this._updateElementText('.event__type-output', newType);
         this._updateElementAttribute('.event__type-icon', 'src', `img/icons/${newType}.png`);
+        const offersContainer = this.element.querySelector('.event__available-offers');
+        if (offersContainer) {
+          offersContainer.innerHTML = createOffersTemplate(newOffers, this._state.offersId);
+        }
+        this._toggleElementVisibility(
+          '.event__section--offers',
+          newOffers.length > 0
+        );
+
         this._closeTypeDropdown();
       }
     );
@@ -291,12 +306,37 @@ export default class EditEventView extends AbstractStatefulView {
   }
 
   _updateDestinationDetails(destination) {
-    this._updateElementText('.event__destination-description', destination.description || '');
-    this._updateElementHTML(
-      '.event__photos-tape',
-      destination.pictures?.map((p) => `<img class="event__photo" src="${p.src}" alt="${p.description}">`).join('') || ''
-    );
-    this._toggleElementVisibility('.event__section--destination', !!destination.description);
+    const sectionDestination = this.element.querySelector('.event__section--destination');
+    const shouldShowSection = !!destination.description || destination.pictures?.length;
+
+    if (shouldShowSection) {
+      if (!sectionDestination) {
+        const sectionHTML = `
+          <section class="event__section event__section--destination">
+            <h3 class="event__section-title event__section-title--destination">Destination</h3>
+            ${destination.description ? `<p class="event__destination-description">${destination.description}</p>` : ''}
+            ${destination.pictures?.length ? `
+              <div class="event__photos-container">
+                <div class="event__photos-tape">
+                  ${destination.pictures.map((p) => `<img class="event__photo" src="${p.src}" alt="${p.description}">`).join('')}
+                </div>
+              </div>
+            ` : ''}
+          </section>
+        `;
+        this.element.querySelector('.event__details').insertAdjacentHTML('beforeend', sectionHTML);
+      } else {
+        this._updateElementText('.event__destination-description', destination.description || '');
+        this._updateElementHTML(
+          '.event__photos-tape',
+          destination.pictures?.map((p) => `<img class="event__photo" src="${p.src}" alt="${p.description}">`).join('') || ''
+        );
+      }
+    } else {
+      if (sectionDestination) {
+        sectionDestination.remove();
+      }
+    }
   }
 
   _setDatepicker() {
