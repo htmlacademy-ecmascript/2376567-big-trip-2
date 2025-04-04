@@ -16,8 +16,9 @@ export default class EventPresenter {
   #onFormOpen = null;
   #onUserAction = null;
   #onDelete = null;
+  #resetFiltersAndSorting = null;
 
-  constructor({ event, destination, offer, onDataChange, destinationAll, offerAll, onFormOpen, onUserAction, onDelete }) {
+  constructor({ event, destination, offer, onDataChange, destinationAll, offerAll, onFormOpen, onUserAction, onDelete, resetFiltersAndSorting }) {
     this.#event = event;
     this.#destination = destination;
     this.#offer = offer;
@@ -27,6 +28,7 @@ export default class EventPresenter {
     this.#onFormOpen = onFormOpen;
     this.#onUserAction = onUserAction;
     this.#onDelete = onDelete;
+    this.#resetFiltersAndSorting = resetFiltersAndSorting;
   }
 
   init(container) {
@@ -84,6 +86,7 @@ export default class EventPresenter {
 
     // Обработчик отправки формы
     this.#editEventView.setFormSubmitHandler((updatedEvent) => {
+      this.#resetFiltersAndSorting();
       this.#editEventView.setSaving(true);
 
       this.#onDataChange(updatedEvent)

@@ -14,8 +14,9 @@ export default class EventsPresenter {
   #eventPresenters = new Map();
   #filterModel = null;
   #boardContainer = null;
+  #resetFiltersAndSorting = null;
 
-  constructor({ events, destinations, offers, boardModel, eventsListComponent, onDataChange, filterModel, boardContainer }) {
+  constructor({ events, destinations, offers, boardModel, eventsListComponent, onDataChange, filterModel, boardContainer, resetFiltersAndSorting }) {
     this.events = events;
     this.#destinations = destinations;
     this.#offers = offers;
@@ -24,6 +25,7 @@ export default class EventsPresenter {
     this.#onDataChange = onDataChange;
     this.#filterModel = filterModel;
     this.#boardContainer = boardContainer;
+    this.#resetFiltersAndSorting = resetFiltersAndSorting;
   }
 
   init() {
@@ -70,7 +72,8 @@ export default class EventsPresenter {
       onUserAction: this.handleUserAction.bind(this),
       onDelete: async (eventId) => {
         await this.handleDeleteEvent(eventId);
-      }
+      },
+      resetFiltersAndSorting: this.#resetFiltersAndSorting,
     });
 
     eventPresenter.init(liElement);

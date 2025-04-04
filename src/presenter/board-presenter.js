@@ -75,6 +75,7 @@ export default class BoardPresenter {
       onDataChange: this._handleEventChange,
       filterModel: this.#filterModel,
       boardContainer: this.#boardContainer,
+      resetFiltersAndSorting: () => this.resetFiltersAndSorting(),
     };
 
     this.#eventsPresenter = new EventsPresenter(eventsPresenterParams);

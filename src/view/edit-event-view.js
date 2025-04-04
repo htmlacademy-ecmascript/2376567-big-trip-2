@@ -37,6 +37,7 @@ const createEditEventTemplate = (state) => {
     destinationNames
   } = state;
 
+  const shouldRenderDestination = description || pictures.length;
   const renderSectionIf = (condition, content) => condition ? content : '';
 
   return `
@@ -110,19 +111,21 @@ const createEditEventTemplate = (state) => {
           </section>
         `)}
 
-        <section class="event__section event__section--destination">
-          <h3 class="event__section-title event__section-title--destination">Destination</h3>
-          <p class="event__destination-description">${description}</p>
-          ${renderSectionIf(pictures.length, `
-            <div class="event__photos-container">
-              <div class="event__photos-tape">
-                ${pictures.map((photo) => `
-                  <img class="event__photo" src="${photo.src}" alt="${photo.description}">
-                `).join('')}
+        ${shouldRenderDestination ? `
+          <section class="event__section event__section--destination">
+            <h3 class="event__section-title event__section-title--destination">Destination</h3>
+            ${description ? `<p class="event__destination-description">${description}</p>` : ''}
+            ${pictures.length ? `
+              <div class="event__photos-container">
+                <div class="event__photos-tape">
+                  ${pictures.map((photo) => `
+                    <img class="event__photo" src="${photo.src}" alt="${photo.description}">
+                  `).join('')}
+                </div>
               </div>
-            </div>
-          `)}
-        </section>
+            ` : ''}
+          </section>
+        ` : ''}
       </section>
     </form>
   `;
@@ -262,7 +265,7 @@ export default class EditEventView extends AbstractStatefulView {
       let timeout;
       destinationInput.addEventListener('input', (evt) => {
         clearTimeout(timeout);
-        timeout = setTimeout(() => this._handleDestinationInput(evt.target.value), 300);
+        timeout = setTimeout(() => this._handleDestinationInput(evt.target.value), 100);
       });
     }
   }
