@@ -47,8 +47,8 @@ export default class EventPresenter {
     this.#eventView.setRollupClickHandler(() => this._replaceEventWithForm());
     this.#eventView.setFavoriteBtnClickHandler(() => this.#onDataChange({ ...this.#event, favorite: !this.#event.favorite }));
 
-    prevEventView.removeElement();
     replace(this.#eventView, prevEventView);
+    prevEventView.removeElement();
   }
 
   resetView() {
@@ -99,7 +99,6 @@ export default class EventPresenter {
           this._replaceFormWithEvent();
         })
         .catch(() => {
-          // В случае ошибки - анимация "тряски" формы
           this.#editEventView.shake();
         });
     });
