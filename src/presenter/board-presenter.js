@@ -14,6 +14,8 @@ export default class BoardPresenter {
   #eventsPresenter = null;
   #addEventForm = null;
   #sortPresenter = null;
+  #isAddFormOpen = false;
+  #tripMainView = null;
 
   constructor({ boardContainer, boardModel, filterModel }) {
     this.#boardContainer = boardContainer;
@@ -76,6 +78,10 @@ export default class BoardPresenter {
       filterModel: this.#filterModel,
       boardContainer: this.#boardContainer,
       resetFiltersAndSorting: () => this.resetFiltersAndSorting(),
+      onFormOpen: () => {
+        this.closeAddEventForm();
+      },
+      tripMainView: this.#tripMainView,
     };
 
     this.#eventsPresenter = new EventsPresenter(eventsPresenterParams);
@@ -105,18 +111,45 @@ export default class BoardPresenter {
 
   }
 
+  setTripMainView(tripMainView) {
+    this.#tripMainView = tripMainView;
+  }
+
   updateEvents(filteredEvents) {
     this.#eventsPresenter.updateEvents(filteredEvents);
   }
 
+  // showAddEventForm(addEventView) {
+  //   this.#eventsPresenter.removeNoEventsView();
+  //   if (this.#addEventForm) {
+  //     this.#addEventForm.removeElement();
+  //   }
+  //   this.#addEventForm = addEventView;
+  //   this.#eventsPresenter.resetAllViews();
+  //   render(this.#addEventForm, this.#eventsListComponent.element, 'afterbegin');
+  // }
+
   showAddEventForm(addEventView) {
-    this.#eventsPresenter.removeNoEventsView();
+    // Закрываем все формы редактирования
+    this.#eventsPresenter.resetAllViews();
+
+    // Закрываем предыдущую форму добавления, если есть
+    this.closeAddEventForm();
+
+    // Открываем новую форму
+    this.#addEventForm = addEventView;
+    // this.#isAddFormOpen = true;
+    render(this.#addEventForm, this.#eventsListComponent.element, 'afterbegin');
+    this.#tripMainView.blockNewEventButton();
+  }
+
+  closeAddEventForm() {
     if (this.#addEventForm) {
       this.#addEventForm.removeElement();
+      this.#addEventForm = null;
+      // this.#isAddFormOpen = false;
+      // this.#tripMainView.unblockNewEventButton();
     }
-    this.#addEventForm = addEventView;
-    this.#eventsPresenter.resetAllViews();
-    render(this.#addEventForm, this.#eventsListComponent.element, 'afterbegin');
   }
 
   _handleModelChange(actionType, payload) {
@@ -143,14 +176,10 @@ export default class BoardPresenter {
   // }
 
   resetFiltersAndSorting() {
-    // Сбрасываем фильтры через модель
     this.#filterModel.resetFilters();
-    // Сбрасываем сортировку
     this.#boardModel.changeSortType(SORT_TYPES.DAY);
     this.#sortPresenter.resetSorting();
-    // Сбрасываем все открытые формы
     this.#eventsPresenter.resetAllViews();
-    // Обновляем список событий
     const filteredEvents = this.#filterModel.filterEvents(this.#boardModel.events);
     this.#eventsPresenter.updateEvents(filteredEvents);
   }

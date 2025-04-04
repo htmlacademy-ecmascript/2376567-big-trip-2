@@ -15,8 +15,10 @@ export default class EventsPresenter {
   #filterModel = null;
   #boardContainer = null;
   #resetFiltersAndSorting = null;
+  #onFormOpen = null;
+  #tripMainView = null;
 
-  constructor({ events, destinations, offers, boardModel, eventsListComponent, onDataChange, filterModel, boardContainer, resetFiltersAndSorting }) {
+  constructor({ events, destinations, offers, boardModel, eventsListComponent, onDataChange, filterModel, boardContainer, resetFiltersAndSorting, onFormOpen, tripMainView}) {
     this.events = events;
     this.#destinations = destinations;
     this.#offers = offers;
@@ -26,6 +28,8 @@ export default class EventsPresenter {
     this.#filterModel = filterModel;
     this.#boardContainer = boardContainer;
     this.#resetFiltersAndSorting = resetFiltersAndSorting;
+    this.#onFormOpen = onFormOpen;
+    this.#tripMainView = tripMainView;
   }
 
   init() {
@@ -68,7 +72,11 @@ export default class EventsPresenter {
       onDataChange: this.#onDataChange,
       destinationAll: this.#destinations,
       offerAll: this.#offers,
-      onFormOpen: this.resetAllViews.bind(this),
+      onFormOpen: () => {
+        this.#tripMainView.unblockNewEventButton();
+        this.#onFormOpen?.();
+        this.resetAllViews();
+      },
       onUserAction: this.handleUserAction.bind(this),
       onDelete: async (eventId) => {
         await this.handleDeleteEvent(eventId);
@@ -190,5 +198,7 @@ export default class EventsPresenter {
   resetAllViews() {
     this.removeNoEventsView();
     this.#eventPresenters.forEach((presenter) => presenter.resetView());
+    this.#tripMainView.unblockNewEventButton();
   }
+
 }

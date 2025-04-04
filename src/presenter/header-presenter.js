@@ -28,6 +28,7 @@ export default class HeaderPresenter {
 
   init() {
     this.#tripMainView = new TripMainView();
+    this.#boardPresenter.setTripMainView(this.#tripMainView);
     this.#headerContainer.innerHTML = '';
     render(this.#tripMainView, this.#headerContainer);
     this.#tripMainView.setNewEventButtonHandler(() => this._handleNewEventClick());
@@ -78,7 +79,7 @@ export default class HeaderPresenter {
     this.#newAddEventView.setCancelClickHandler(() => this._closeForm());
     this.#newAddEventView.setEscKeyDownHandler(() => this._closeForm());
     this.#boardPresenter.showAddEventForm(this.#newAddEventView);
-    this.#isFormOpen = true;
+    // this.#isFormOpen = true;
     this.#tripMainView.blockNewEventButton();
   }
 

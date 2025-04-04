@@ -239,41 +239,6 @@ export default class EditEventView extends AbstractStatefulView {
     this._setDatepicker();
   }
 
-  _setTypeChangeHandler() {
-    this._addConditionalListener('.event__type-list', 'change',
-      (evt) => evt.target.tagName === 'INPUT',
-      (evt) => {
-        const newType = evt.target.value;
-        const newOffers = this.#offers.find((o) => o.type === newType)?.offers || [];
-
-        const checkedOffers = Array.from(
-          this.element.querySelectorAll('.event__offer-checkbox:checked')
-        ).map((input) => input.value);
-
-        this._setState({
-          type: newType,
-          offersId: checkedOffers.filter((id) =>
-            newOffers.some((offer) => offer.id === id)
-          ),
-          offers: newOffers
-        });
-
-        this._updateElementText('.event__type-output', newType);
-        this._updateElementAttribute('.event__type-icon', 'src', `img/icons/${newType}.png`);
-        const offersContainer = this.element.querySelector('.event__available-offers');
-        if (offersContainer) {
-          offersContainer.innerHTML = createOffersTemplate(newOffers, this._state.offersId);
-        }
-        this._toggleElementVisibility(
-          '.event__section--offers',
-          newOffers.length > 0
-        );
-
-        this._closeTypeDropdown();
-      }
-    );
-  }
-
   _setDestinationChangeHandler() {
     const destinationInput = this.element.querySelector('.event__input--destination');
     if (destinationInput) {
@@ -413,6 +378,62 @@ export default class EditEventView extends AbstractStatefulView {
     const typeToggle = this.element.querySelector('.event__type-toggle');
     if (typeToggle) {
       typeToggle.checked = false;
+    }
+  }
+
+  _setTypeChangeHandler() {
+    this._addConditionalListener('.event__type-list', 'change',
+      (evt) => evt.target.tagName === 'INPUT',
+      (evt) => {
+        const newType = evt.target.value;
+        const newOffers = this.#offers.find((o) => o.type === newType)?.offers || [];
+
+        const checkedOffers = Array.from(
+          this.element.querySelectorAll('.event__offer-checkbox:checked')
+        ).map((input) => input.value);
+
+        this._setState({
+          type: newType,
+          offersId: checkedOffers.filter((id) =>
+            newOffers.some((offer) => offer.id === id)
+          ),
+          offers: newOffers
+        });
+
+        this._updateElementText('.event__type-output', newType);
+        this._updateElementAttribute('.event__type-icon', 'src', `img/icons/${newType}.png`);
+
+        this._updateOffersSection(newOffers);
+
+        this._closeTypeDropdown();
+      }
+    );
+  }
+
+  _updateOffersSection(offers) {
+    const sectionOffers = this.element.querySelector('.event__section--offers');
+    const shouldShowSection = offers?.length > 0;
+
+    if (shouldShowSection) {
+      const offersHTML = createOffersTemplate(offers, this._state.offersId);
+
+      if (!sectionOffers) {
+        const sectionHTML = `
+          <section class="event__section event__section--offers">
+            <h3 class="event__section-title event__section-title--offers">Offers</h3>
+            <div class="event__available-offers">
+              ${offersHTML}
+            </div>
+          </section>
+        `;
+        this.element.querySelector('.event__details').insertAdjacentHTML('afterbegin', sectionHTML);
+      } else {
+        this._updateElementHTML('.event__available-offers', offersHTML);
+      }
+    } else {
+      if (sectionOffers) {
+        sectionOffers.remove();
+      }
     }
   }
 
