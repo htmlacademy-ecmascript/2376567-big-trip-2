@@ -13,13 +13,15 @@ export default class HeaderPresenter {
   #newAddEventView = null;
   #isFormOpen = false;
   #boardModel = null;
+  #uiBlocker = null;
 
-  constructor({ headerContainer, filterModel, boardPresenter, boardModel }) {
+  constructor({ headerContainer, filterModel, boardPresenter, boardModel, uiBlocker }) {
     this.#headerContainer = headerContainer;
     this.#filterModel = filterModel;
     this.#filtersPresenter = new FiltersPresenter({ filterModel: this.#filterModel });
     this.#boardPresenter = boardPresenter;
     this.#boardModel = boardModel;
+    this.#uiBlocker = uiBlocker;
 
     this.#filterModel.addObserver(this._handleFilterChange.bind(this));
 
@@ -28,6 +30,7 @@ export default class HeaderPresenter {
 
   init() {
     this.#tripMainView = new TripMainView();
+    this.#boardPresenter.setTripMainView(this.#tripMainView);
     this.#headerContainer.innerHTML = '';
     render(this.#tripMainView, this.#headerContainer);
     this.#tripMainView.setNewEventButtonHandler(() => this._handleNewEventClick());
@@ -38,6 +41,8 @@ export default class HeaderPresenter {
     if (this.#isFormOpen) {
       return;
     }
+
+    this.#boardPresenter.resetFiltersAndSorting();
 
     const newEvent = {
       id: null,
@@ -57,26 +62,29 @@ export default class HeaderPresenter {
       offers: this.#boardModel.offers || [],
     });
 
-    this.#newAddEventView.setFormSubmitHandler((newEventData) => {
-      this.#newAddEventView.setSaving(true);
+    this.#newAddEventView.setFormSubmitHandler(async (newEventData) => {
 
-      this.#boardModel.addEvent(newEventData)
-        .then(() => {
-          this._closeForm();
-        })
-        .catch((err) => {
-          console.log('Ошибка сохранения:', err);
-          this.#newAddEventView.shake();
-        })
-        .finally(() => {
-          this.#newAddEventView.setSaving(false);
-        });
+      const formView = this.#newAddEventView;
+
+      try {
+        this.#uiBlocker.block();
+        this.#newAddEventView.setSaving(true);
+        await this.#boardModel.addEvent(newEventData);
+        this._closeForm();
+      } catch (err) {
+        this.#newAddEventView.shake();
+      } finally {
+        if (this.#newAddEventView === formView) {
+          formView.setSaving(false);
+        }
+        this.#uiBlocker.unblock();
+      }
     });
 
     this.#newAddEventView.setCancelClickHandler(() => this._closeForm());
     this.#newAddEventView.setEscKeyDownHandler(() => this._closeForm());
     this.#boardPresenter.showAddEventForm(this.#newAddEventView);
-    this.#isFormOpen = true;
+    // this.#isFormOpen = true;
     this.#tripMainView.blockNewEventButton();
   }
 

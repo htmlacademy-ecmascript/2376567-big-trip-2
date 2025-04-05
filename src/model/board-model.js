@@ -12,6 +12,21 @@ export default class BoardModel extends Observable {
     this.eventsApiService = eventsApiService;
   }
 
+  _notify(updateType, data) {
+    console.groupCollapsed(`Model Update: ${updateType}`);
+    console.log('Data:', data);
+    console.log('Current events:', this.#events); // Логируем текущее состояние
+    console.trace('Update origin'); // Покажет, откуда пришло обновление
+    console.groupEnd();
+
+    // this._observers.forEach(observer => observer(updateType, data));
+  }
+
+  // _notify(updateType, data) {
+  //   console.log(`Update: ${updateType}`, data);
+  //   // this._observers.forEach(observer => observer(updateType, data));
+  // }
+
   set events(events) {
     this.#events = events;
     // this._notify(USER_ACTIONS.EVENTS_LOADED, events);

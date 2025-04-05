@@ -21,6 +21,13 @@ export default class SortPresenter {
     sortView.setSortInputСhangeHandler(this._handleSortTypeChange);
   }
 
+  resetSorting() {
+    const dayInput = this.container.querySelector('#sort-day');
+    if (dayInput) {
+      dayInput.checked = true;
+    }
+  }
+
   _handleSortTypeChange = (evt) => {
     const sortType = evt.target.dataset.sortType;
 
@@ -29,11 +36,11 @@ export default class SortPresenter {
     }
 
     this.#boardModel.changeSortType(sortType);
-    const sortedEvents = this._getSortedEvents(this.#eventsPresenter.events, sortType);
+    const sortedEvents = this.getSortedEvents(this.#eventsPresenter.events, sortType);
     this.#eventsPresenter.updateEvents(sortedEvents);
   };
 
-  _getSortedEvents(events, sortType) {
+  getSortedEvents(events, sortType) {
     switch (sortType) {
       case SORT_TYPES.TIME:
         return [...events].sort((a, b) => dayjs(b.dateTo).diff(b.dateFrom) - dayjs(a.dateTo).diff(a.dateFrom));

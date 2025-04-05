@@ -12,6 +12,11 @@ export default class FilterModel extends Observable {
     super();
   }
 
+  resetFilters() {
+    this.#filters = { ...FILTERS[0] };
+    this._notify('FILTER_RESET', this.#filters);
+  }
+
   get filters() {
     return this.#filters;
   }

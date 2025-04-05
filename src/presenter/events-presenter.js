@@ -14,8 +14,12 @@ export default class EventsPresenter {
   #eventPresenters = new Map();
   #filterModel = null;
   #boardContainer = null;
+  #resetFiltersAndSorting = null;
+  #onFormOpen = null;
+  #tripMainView = null;
+  #uiBlocker = null;
 
-  constructor({ events, destinations, offers, boardModel, eventsListComponent, onDataChange, filterModel, boardContainer }) {
+  constructor({ events, destinations, offers, boardModel, eventsListComponent, onDataChange, filterModel, boardContainer, resetFiltersAndSorting, onFormOpen, tripMainView, uiBlocker}) {
     this.events = events;
     this.#destinations = destinations;
     this.#offers = offers;
@@ -24,6 +28,10 @@ export default class EventsPresenter {
     this.#onDataChange = onDataChange;
     this.#filterModel = filterModel;
     this.#boardContainer = boardContainer;
+    this.#resetFiltersAndSorting = resetFiltersAndSorting;
+    this.#onFormOpen = onFormOpen;
+    this.#tripMainView = tripMainView;
+    this.#uiBlocker = uiBlocker;
   }
 
   init() {
@@ -31,6 +39,9 @@ export default class EventsPresenter {
   }
 
   _renderEvent(event) {
+    const liElement = document.createElement('li');
+    liElement.classList.add('trip-events__item');
+
     const destination = this.#boardModel.getDestinationsById(event.destination);
     const offer = this.#boardModel.getOffersByType(event.type);
 
@@ -41,50 +52,63 @@ export default class EventsPresenter {
       onDataChange: this.#onDataChange,
       destinationAll: this.#destinations,
       offerAll: this.#offers,
-      onFormOpen: this.resetAllViews.bind(this),
+      onFormOpen: () => {
+        this.#tripMainView.unblockNewEventButton();
+        this.#onFormOpen?.();
+        this.resetAllViews();
+      },
       onUserAction: this.handleUserAction.bind(this),
       onDelete: async (eventId) => {
         await this.handleDeleteEvent(eventId);
-      }
+      },
+      resetFiltersAndSorting: this.#resetFiltersAndSorting,
+      boardModel: this.#boardModel,
+      uiBlocker: this.#uiBlocker,
     });
 
-    eventPresenter.init(this.#eventsListComponent.element);
+    eventPresenter.init(liElement);
+    this.#eventsListComponent.element.appendChild(liElement);
     this.#eventPresenters.set(event.id, eventPresenter);
   }
 
   async handleDeleteEvent(eventId) {
-    this.#eventsListComponent.element.innerHTML = '';
-    await this.#boardModel.deleteEvent(eventId);
-    this._renderEvents();
-
+    try {
+      this.#uiBlocker.block();
+      this.#eventsListComponent.element.innerHTML = '';
+      await this.#boardModel.deleteEvent(eventId);
+      this._renderEvents();
+    } finally {
+      this.#uiBlocker.unblock();
+    }
   }
 
   _renderEvents() {
     this.removeNoEventsView();
-    let message = '';
-    switch (this.#filterModel.filters.value) {
-      case 'everything':
-        message = NO_EVENTS_MESSAGES.everything;
-        break;
-      case 'past':
-        message = NO_EVENTS_MESSAGES.past;
-        break;
-      case 'present':
-        message = NO_EVENTS_MESSAGES.present;
-        break;
-      case 'future':
-        message = NO_EVENTS_MESSAGES.future;
-        break;
-      default:
-        message = NO_EVENTS_MESSAGES.everything;
-    }
+
+    const message = this._getNoEventsMessage();
 
     if (this.events.length === 0) {
       const noEventsView = new NoEventsView(message);
       render(noEventsView, this.#eventsListComponent.element);
-    } else {
-      this.#eventsListComponent.element.innerHTML = '';
-      this.events.forEach((event) => this._renderEvent(event));
+      return;
+    }
+
+    this.#eventsListComponent.element.innerHTML = '';
+
+    this.events.forEach((event) => this._renderEvent(event));
+  }
+
+  _getNoEventsMessage() {
+    switch (this.#filterModel.filters.value) {
+      case 'past':
+        return NO_EVENTS_MESSAGES.past;
+      case 'present':
+        return NO_EVENTS_MESSAGES.present;
+      case 'future':
+        return NO_EVENTS_MESSAGES.future;
+      case 'everything':
+      default:
+        return NO_EVENTS_MESSAGES.everything;
     }
   }
 
@@ -127,5 +151,6 @@ export default class EventsPresenter {
   resetAllViews() {
     this.removeNoEventsView();
     this.#eventPresenters.forEach((presenter) => presenter.resetView());
+    this.#tripMainView.unblockNewEventButton();
   }
 }

@@ -44,17 +44,22 @@ export default class AbstractStatefulView extends AbstractView {
   /** Метод для перерисовки элемента */
 
   #rerenderElement() {
-    const parent = this.element.parentElement;
-    const oldElement = this.element;
-
-    if (!parent) {
+    if (!this.element || !this.element.parentElement) {
       return;
     }
+
+    const parent = this.element.parentElement;
+    const oldElement = this.element;
 
     this.removeElement();
     const newElement = this.element;
 
-    parent.replaceChild(newElement, oldElement);
-    this._restoreHandlers();
+    if (parent && oldElement.parentNode === parent) {
+      parent.replaceChild(newElement, oldElement);
+      // this._restoreHandlers();//возможно сделать
+    } else {
+      parent?.appendChild(newElement);
+      // this._restoreHandlers();//возможно сделать
+    }
   }
 }
