@@ -13,7 +13,6 @@ export default class FiltersPresenter {
   constructor({ filterModel }) {
     this.#filterModel = filterModel;
     this.#filterModel.addObserver(this._handleModelReset.bind(this));
-    // this.#filterModel.addObserver(this._handleModelChange.bind(this));
   }
 
   init() {
@@ -37,8 +36,4 @@ export default class FiltersPresenter {
 
     this.#filterModel._notify('FILTER_CHANGED', filter);
   }
-
-  // _handleModelChange(filter) {
-  //   console.log('FiltersPresenter: Фильтр изменен:', filter);
-  // }
 }

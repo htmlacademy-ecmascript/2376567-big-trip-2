@@ -77,47 +77,15 @@ export default class EventsPresenter {
       this.#eventsListComponent.element.innerHTML = '';
       await this.#boardModel.deleteEvent(eventId);
       this._renderEvents();
-    } catch (error) {
-      console.error('Delete error:', error);
     } finally {
       this.#uiBlocker.unblock();
     }
   }
 
-  // _renderEvents() {
-  //   this.removeNoEventsView();
-  //   let message = '';
-  //   switch (this.#filterModel.filters.value) {
-  //     case 'everything':
-  //       message = NO_EVENTS_MESSAGES.everything;
-  //       break;
-  //     case 'past':
-  //       message = NO_EVENTS_MESSAGES.past;
-  //       break;
-  //     case 'present':
-  //       message = NO_EVENTS_MESSAGES.present;
-  //       break;
-  //     case 'future':
-  //       message = NO_EVENTS_MESSAGES.future;
-  //       break;
-  //     default:
-  //       message = NO_EVENTS_MESSAGES.everything;
-  //   }
-
-  //   if (this.events.length === 0) {
-  //     const noEventsView = new NoEventsView(message);
-  //     render(noEventsView, this.#eventsListComponent.element);
-  //   } else {
-  //     this.#eventsListComponent.element.innerHTML = '';
-  //     this.events.forEach((event) => this._renderEvent(event));
-  //   }
-  // }
-
   _renderEvents() {
     this.removeNoEventsView();
 
-    // Получаем сообщение для пустого списка
-    const message = this.#getNoEventsMessage();
+    const message = this._getNoEventsMessage();
 
     if (this.events.length === 0) {
       const noEventsView = new NoEventsView(message);
@@ -125,15 +93,12 @@ export default class EventsPresenter {
       return;
     }
 
-    // Очищаем список перед рендерингом
     this.#eventsListComponent.element.innerHTML = '';
 
-    // Рендерим каждый ивент в своем li-элементе
     this.events.forEach((event) => this._renderEvent(event));
   }
 
-  // Вспомогательный метод для получения сообщения при пустом списке
-  #getNoEventsMessage() {
+  _getNoEventsMessage() {
     switch (this.#filterModel.filters.value) {
       case 'past':
         return NO_EVENTS_MESSAGES.past;
@@ -188,5 +153,4 @@ export default class EventsPresenter {
     this.#eventPresenters.forEach((presenter) => presenter.resetView());
     this.#tripMainView.unblockNewEventButton();
   }
-
 }

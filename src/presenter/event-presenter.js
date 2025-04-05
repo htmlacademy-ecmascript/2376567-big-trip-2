@@ -71,7 +71,6 @@ export default class EventPresenter {
 
     const listItem = this.#eventView.element.closest('li.trip-events__item');
     if (!listItem) {
-      console.log('Не найден родительский li элемент для события');
       return;
     }
 
@@ -114,7 +113,6 @@ export default class EventPresenter {
 
     const listItem = this.#editEventView.element.closest('li.trip-events__item');
     if (!listItem) {
-      console.log('Не найден родительский li элемент для формы редактирования');
       return;
     }
 
@@ -142,7 +140,6 @@ export default class EventPresenter {
         this._replaceFormWithEvent();
       }
     } catch (error) {
-      console.log('Ошибка удаления', error);
       if (this.#editEventView) {
         this.#editEventView.shake();
       }
@@ -207,7 +204,6 @@ export default class EventPresenter {
       this._replaceFormWithEvent();
     } catch (error) {
       this.#editEventView.shake();
-      console.log('Ошибка сохранания', error);
       throw error;
     }
   }
