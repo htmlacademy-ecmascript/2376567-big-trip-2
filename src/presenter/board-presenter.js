@@ -49,17 +49,40 @@ export default class BoardPresenter {
     this.#eventsPresenter.init(this.#eventsListComponent);
   }
 
+  // _handleEventChange = async (updatedEvent) => {
+  //   try {
+  //     const savedEvent = await this.#boardModel.updateEvent(updatedEvent);
+  //     const modelEvents = this.#boardModel.events;
+  //     if (!modelEvents.some((e) => e.id === savedEvent.id)) {
+  //       this.#eventsPresenter.updateEvents(modelEvents);
+  //       return;
+  //     }
+  //     this.#eventsPresenter.updateEvent(savedEvent);
+  //   } catch {
+  //     this.#eventsPresenter.updateEvents(this.#boardModel.events);
+  //   }
+  // };
+
   _handleEventChange = async (updatedEvent) => {
     try {
       const savedEvent = await this.#boardModel.updateEvent(updatedEvent);
       const modelEvents = this.#boardModel.events;
-      if (!modelEvents.some((e) => e.id === savedEvent.id)) {
-        this.#eventsPresenter.updateEvents(modelEvents);
-        return;
-      }
-      this.#eventsPresenter.updateEvent(savedEvent);
-    } catch {
-      this.#eventsPresenter.updateEvents(this.#boardModel.events);
+
+      // Ждем завершения всех обновлений UI
+      await new Promise(resolve => {
+        if (!modelEvents.some((e) => e.id === savedEvent.id)) {
+          this.#eventsPresenter.updateEvents(modelEvents, resolve);
+        } else {
+          this.#eventsPresenter.updateEvent(savedEvent, resolve);
+        }
+      });
+
+      return savedEvent;
+    } catch (error) {
+      await new Promise(resolve => {
+        this.#eventsPresenter.updateEvents(this.#boardModel.events, resolve);
+      });
+      throw error;
     }
   };
 
@@ -153,17 +176,27 @@ export default class BoardPresenter {
   }
 
   _handleModelChange(actionType, payload) {
+    console.log(`Изменение модели: ${actionType}`, payload);
     switch (actionType) {
       case USER_ACTIONS.ADD_EVENT:
         this.#eventsPresenter.updateEvent(payload);
         break;
       case USER_ACTIONS.UPDATE_EVENT:
-        this.#eventsPresenter.updateEvent(payload);
+        this._updateEventsList();
+        break;
+      case USER_ACTIONS.SORT_CHANGED:
+        this._updateEventsList();
         break;
       case USER_ACTIONS.DELETE_EVENT:
         this.#eventsPresenter.updateEvents(this.#boardModel.events);
         break;
     }
+  }
+
+  _updateEventsList() {
+    const events = this.#boardModel.events;
+    const sortedEvents = this.#sortPresenter._getSortedEvents(events, this.#boardModel.getCurrentSortType());
+    this.#eventsPresenter.updateEvents(sortedEvents);
   }
 
   resetAllViews() {

@@ -82,6 +82,7 @@ export default class EventsPresenter {
         await this.handleDeleteEvent(eventId);
       },
       resetFiltersAndSorting: this.#resetFiltersAndSorting,
+      boardModel: this.#boardModel
     });
 
     eventPresenter.init(liElement);

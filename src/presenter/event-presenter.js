@@ -65,17 +65,14 @@ export default class EventPresenter {
   }
 
   _replaceEventWithForm() {
-    // Уведомляем внешние компоненты об открытии формы
     this.#onFormOpen();
 
-    // Получаем ссылку на родительский li-элемент
     const listItem = this.#eventView.element.closest('li.trip-events__item');
     if (!listItem) {
       console.log('Не найден родительский li элемент для события');
       return;
     }
 
-    // Создаем новую форму редактирования
     this.#editEventView = new EditEventView(
       this.#event,
       this.#destination,
@@ -84,60 +81,42 @@ export default class EventPresenter {
       this.#offerAll
     );
 
-    // Обработчик отправки формы
-    this.#editEventView.setFormSubmitHandler((updatedEvent) => {
-      this.#resetFiltersAndSorting();
+    this.#editEventView.setFormSubmitHandler(async (updatedEvent) => {
       this.#editEventView.setSaving(true);
-
-      this.#onDataChange(updatedEvent)
-        .then(() => {
-          // После успешного обновления:
-          // 1. Обновляем данные в презентере
-          // 2. Возвращаем карточку события
-          this.update(
-            updatedEvent,
-            this.#destinationAll.find((d) => d.id === updatedEvent.destination),
-            this.#offerAll.find((o) => o.type === updatedEvent.type)
-          );
-          this._replaceFormWithEvent();
-        })
-        .catch(() => {
-          this.#editEventView.shake();
-        });
+      try {
+        await this.#onDataChange(updatedEvent);
+        this.#resetFiltersAndSorting();
+        this._replaceFormWithEvent();
+      } catch {
+        this.#editEventView.shake();
+      } finally {
+        this.#editEventView.setSaving(false);
+      }
     });
 
-    // Установка обработчиков:
     this.#editEventView.setDeleteClickHandler(() => this._deleteFormEvent());
     this.#editEventView.setEscKeyDownHandler(() => this._replaceFormWithEvent());
     this.#editEventView.setCloseButtonClickHandler(() => this._deleteFormEvent());
     this.#editEventView.setRollupButtonClickHandler(() => this._replaceFormWithEvent());
 
-    // Заменяем содержимое li-элемента: карточку на форму
-    listItem.innerHTML = ''; // Очищаем li
-    listItem.appendChild(this.#editEventView.element); // Добавляем форму
+    listItem.innerHTML = '';
+    listItem.appendChild(this.#editEventView.element);
   }
 
-  /**
-   * Заменяет форму редактирования обратно на карточку события
-   * Работает через родительский li-элемент для надежности
-   */
   _replaceFormWithEvent() {
     if (!this.#editEventView) {
       return;
     }
 
-    // Находим родительский li-элемент
     const listItem = this.#editEventView.element.closest('li.trip-events__item');
     if (!listItem) {
       console.log('Не найден родительский li элемент для формы редактирования');
       return;
     }
 
-    // Заменяем содержимое li-элемента: форму на карточку
-    listItem.innerHTML = ''; // Очищаем li
-    listItem.appendChild(this.#eventView.element); // Добавляем карточку события
+    listItem.innerHTML = '';
+    listItem.appendChild(this.#eventView.element);
 
-    // Удаляем форму
     this.#editEventView.removeElement();
     this.#editEventView = null;
   }

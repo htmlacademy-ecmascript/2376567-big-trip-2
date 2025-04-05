@@ -46,6 +46,9 @@ Promise.all([
 })
   .catch(() => {
     loadingView.removeElement();
-    const errorView = new FailedLoadView();
-    render(errorView, siteMainElement);
+    // Добавляем таймаут 500 мс перед показом ошибки
+    setTimeout(() => {
+      const errorView = new FailedLoadView();
+      render(errorView, siteMainElement);
+    }, 500);
   });
