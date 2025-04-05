@@ -6,9 +6,20 @@ import EventsApiService from './api/events-api-service.js';
 import FailedLoadView from './view/failed-load-view.js';
 import { render } from './framework/render.js';
 import LoadingView from './view/loading-view.js';
+import UiBlocker from './framework/ui-blocker/ui-blocker.js';
 
 const AUTHORIZATION = 'Basic GS2sfS44wcl1sa2';
 const END_POINT = 'https://23.objects.htmlacademy.pro/big-trip';
+
+const UIBLOCKER_TIME_LIMITS = {
+  LOWER_LIMIT: 200,
+  UPPER_LIMIT: 1000
+};
+
+const uiBlocker = new UiBlocker({
+  lowerLimit: UIBLOCKER_TIME_LIMITS.LOWER_LIMIT,
+  upperLimit: UIBLOCKER_TIME_LIMITS.UPPER_LIMIT
+});
 
 const siteMainElement = document.querySelector('.trip-events');
 const siteHeaderElement = document.querySelector('.page-header');
@@ -21,6 +32,7 @@ const boardPresenter = new BoardPresenter({
   boardContainer: siteMainElement,
   boardModel,
   filterModel,
+  uiBlocker
 });
 
 const headerPresenter = new HeaderPresenter({
@@ -28,6 +40,7 @@ const headerPresenter = new HeaderPresenter({
   filterModel,
   boardPresenter,
   boardModel,
+  uiBlocker
 });
 
 headerPresenter.init();
@@ -46,7 +59,6 @@ Promise.all([
 })
   .catch(() => {
     loadingView.removeElement();
-    // Добавляем таймаут 500 мс перед показом ошибки
     setTimeout(() => {
       const errorView = new FailedLoadView();
       render(errorView, siteMainElement);

@@ -17,8 +17,9 @@ export default class EventsPresenter {
   #resetFiltersAndSorting = null;
   #onFormOpen = null;
   #tripMainView = null;
+  #uiBlocker = null;
 
-  constructor({ events, destinations, offers, boardModel, eventsListComponent, onDataChange, filterModel, boardContainer, resetFiltersAndSorting, onFormOpen, tripMainView}) {
+  constructor({ events, destinations, offers, boardModel, eventsListComponent, onDataChange, filterModel, boardContainer, resetFiltersAndSorting, onFormOpen, tripMainView, uiBlocker}) {
     this.events = events;
     this.#destinations = destinations;
     this.#offers = offers;
@@ -30,33 +31,12 @@ export default class EventsPresenter {
     this.#resetFiltersAndSorting = resetFiltersAndSorting;
     this.#onFormOpen = onFormOpen;
     this.#tripMainView = tripMainView;
+    this.#uiBlocker = uiBlocker;
   }
 
   init() {
     this._renderEvents();
   }
-
-  // _renderEvent(event) {
-  //   const destination = this.#boardModel.getDestinationsById(event.destination);
-  //   const offer = this.#boardModel.getOffersByType(event.type);
-
-  //   const eventPresenter = new EventPresenter({
-  //     event,
-  //     destination,
-  //     offer,
-  //     onDataChange: this.#onDataChange,
-  //     destinationAll: this.#destinations,
-  //     offerAll: this.#offers,
-  //     onFormOpen: this.resetAllViews.bind(this),
-  //     onUserAction: this.handleUserAction.bind(this),
-  //     onDelete: async (eventId) => {
-  //       await this.handleDeleteEvent(eventId);
-  //     }
-  //   });
-
-  //   eventPresenter.init(this.#eventsListComponent.element);
-  //   this.#eventPresenters.set(event.id, eventPresenter);
-  // }
 
   _renderEvent(event) {
     const liElement = document.createElement('li');
@@ -82,7 +62,8 @@ export default class EventsPresenter {
         await this.handleDeleteEvent(eventId);
       },
       resetFiltersAndSorting: this.#resetFiltersAndSorting,
-      boardModel: this.#boardModel
+      boardModel: this.#boardModel,
+      uiBlocker: this.#uiBlocker,
     });
 
     eventPresenter.init(liElement);
@@ -91,10 +72,16 @@ export default class EventsPresenter {
   }
 
   async handleDeleteEvent(eventId) {
-    this.#eventsListComponent.element.innerHTML = '';
-    await this.#boardModel.deleteEvent(eventId);
-    this._renderEvents();
-
+    try {
+      this.#uiBlocker.block();
+      this.#eventsListComponent.element.innerHTML = '';
+      await this.#boardModel.deleteEvent(eventId);
+      this._renderEvents();
+    } catch (error) {
+      console.error('Delete error:', error);
+    } finally {
+      this.#uiBlocker.unblock();
+    }
   }
 
   // _renderEvents() {

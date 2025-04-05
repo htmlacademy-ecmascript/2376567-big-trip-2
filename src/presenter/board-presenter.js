@@ -7,7 +7,6 @@ import { SORT_TYPES } from '../const.js';
 import dayjs from 'dayjs';
 import advancedFormat from 'dayjs/plugin/advancedFormat';
 dayjs.extend(advancedFormat);
-
 export default class BoardPresenter {
   #eventsListComponent = new EventsListView();
   #boardContainer = null;
@@ -18,11 +17,13 @@ export default class BoardPresenter {
   #sortPresenter = null;
   #isAddFormOpen = false;
   #tripMainView = null;
+  #uiBlocker = null;
 
-  constructor({ boardContainer, boardModel, filterModel }) {
+  constructor({ boardContainer, boardModel, filterModel, uiBlocker }) {
     this.#boardContainer = boardContainer;
     this.#boardModel = boardModel;
     this.#filterModel = filterModel;
+    this.#uiBlocker = uiBlocker;
 
     this.#filterModel.addObserver((filter) => this._handleFilterUpdate(filter));
     this.#boardModel.addObserver((actionType, payload) => this._handleModelChange(actionType, payload));
@@ -123,6 +124,7 @@ export default class BoardPresenter {
         this.closeAddEventForm();
       },
       tripMainView: this.#tripMainView,
+      uiBlocker: this.#uiBlocker,
     };
 
     this.#eventsPresenter = new EventsPresenter(eventsPresenterParams);

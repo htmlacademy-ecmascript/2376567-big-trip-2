@@ -186,7 +186,6 @@ export default class EditEventView extends AbstractStatefulView {
     const destination = this.#destinations.find((d) => d.name === destinationName);
 
     if (!destination) {
-      console.log('События не найдены');
       this.shake();
       return;
     }
@@ -201,7 +200,6 @@ export default class EditEventView extends AbstractStatefulView {
 
     const basePrice = Number(formData.get('event-price'));
     if (isNaN(basePrice) || basePrice < 1 || basePrice > 100000) {
-      console.log('Неверная цена');
       this.shake();
       return;
     }
@@ -210,7 +208,6 @@ export default class EditEventView extends AbstractStatefulView {
     const dateTo = convertDateToISO(formData.get('event-end-time'));
 
     if (!dateFrom || !dateTo || new Date(dateFrom) >= new Date(dateTo)) {
-      console.log('Неверная дата');
       this.shake();
       return;
     }

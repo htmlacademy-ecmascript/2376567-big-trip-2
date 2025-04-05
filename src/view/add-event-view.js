@@ -122,7 +122,7 @@ export default class AddEventView extends AbstractStatefulView {
   #datepickerStart = null;
   #datepickerEnd = null;
 
-  constructor({ event, destination, offer, destinations, offers }) {
+  constructor({ event, destination, destinations, offers }) {
     super();
     this.#destinations = destinations || [];
     this.#offers = offers || [];

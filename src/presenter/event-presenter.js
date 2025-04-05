@@ -17,8 +17,9 @@ export default class EventPresenter {
   #onUserAction = null;
   #onDelete = null;
   #resetFiltersAndSorting = null;
+  #uiBlocker = null;
 
-  constructor({ event, destination, offer, onDataChange, destinationAll, offerAll, onFormOpen, onUserAction, onDelete, resetFiltersAndSorting }) {
+  constructor({ event, destination, offer, onDataChange, destinationAll, offerAll, onFormOpen, onUserAction, onDelete, resetFiltersAndSorting, uiBlocker }) {
     this.#event = event;
     this.#destination = destination;
     this.#offer = offer;
@@ -29,6 +30,7 @@ export default class EventPresenter {
     this.#onUserAction = onUserAction;
     this.#onDelete = onDelete;
     this.#resetFiltersAndSorting = resetFiltersAndSorting;
+    this.#uiBlocker = uiBlocker;
   }
 
   init(container) {
@@ -84,6 +86,7 @@ export default class EventPresenter {
     this.#editEventView.setFormSubmitHandler(async (updatedEvent) => {
       this.#editEventView.setSaving(true);
       try {
+        this.#uiBlocker.block();
         await this.#onDataChange(updatedEvent);
         this.#resetFiltersAndSorting();
         this._replaceFormWithEvent();
@@ -91,6 +94,7 @@ export default class EventPresenter {
         this.#editEventView.shake();
       } finally {
         this.#editEventView.setSaving(false);
+        this.#uiBlocker.unblock();
       }
     });
 
