@@ -43,8 +43,6 @@ const headerPresenter = new HeaderPresenter({
   uiBlocker
 });
 
-headerPresenter.init();
-
 const loadingView = new LoadingView();
 
 render(loadingView, siteMainElement);
@@ -55,6 +53,7 @@ Promise.all([
   boardModel.loadEvents(),
 ]).then(() => {
   loadingView.removeElement();
+  headerPresenter.init();
   boardPresenter.init();
 })
   .catch(() => {

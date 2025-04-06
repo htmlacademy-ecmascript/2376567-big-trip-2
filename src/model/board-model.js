@@ -1,5 +1,8 @@
 import Observable from '../framework/observable.js';
 import { USER_ACTIONS, SORT_TYPES } from '../const.js';
+import dayjs from 'dayjs';
+import advancedFormat from 'dayjs/plugin/advancedFormat';
+dayjs.extend(advancedFormat);
 
 export default class BoardModel extends Observable {
   #events = [];
@@ -12,24 +15,8 @@ export default class BoardModel extends Observable {
     this.eventsApiService = eventsApiService;
   }
 
-  _notify(updateType, data) {
-    console.groupCollapsed(`Model Update: ${updateType}`);
-    console.log('Data:', data);
-    console.log('Current events:', this.#events); // Логируем текущее состояние
-    console.trace('Update origin'); // Покажет, откуда пришло обновление
-    console.groupEnd();
-
-    // this._observers.forEach(observer => observer(updateType, data));
-  }
-
-  // _notify(updateType, data) {
-  //   console.log(`Update: ${updateType}`, data);
-  //   // this._observers.forEach(observer => observer(updateType, data));
-  // }
-
   set events(events) {
     this.#events = events;
-    // this._notify(USER_ACTIONS.EVENTS_LOADED, events);
   }
 
   get events() {
@@ -47,7 +34,6 @@ export default class BoardModel extends Observable {
   async loadEvents() {
     const events = await this.eventsApiService.points;
     this.#events = events;
-    // this._notify(USER_ACTIONS.EVENTS_LOADED, events);
   }
 
   async loadOffers() {
@@ -65,7 +51,8 @@ export default class BoardModel extends Observable {
   }
 
   getOffersByType(type) {
-    return this.#allOffers.find((offer) => offer.type === type);
+    const offer = this.#allOffers.find((item) => item.type === type);
+    return offer || null;
   }
 
   getOffersById(type, itemsId) {
@@ -116,5 +103,9 @@ export default class BoardModel extends Observable {
 
   getCurrentSortType() {
     return this.#currentSortType;
+  }
+
+  getSortedEventsByDay() {
+    return [...this.#events].sort((a, b) => dayjs(b.dateTo).diff(b.dateFrom) - dayjs(a.dateTo).diff(a.dateFrom));
   }
 }

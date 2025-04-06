@@ -23,7 +23,6 @@ export default class EventsApiService extends ApiService {
 
   async updatePoint(point) {
     const adaptedPoint = this.#adaptToServer(point);
-    console.log('Отправлено на сервер', adaptedPoint);
     const response = await this._load({
       url: `points/${point.id}`,
       method: 'PUT',
@@ -32,7 +31,6 @@ export default class EventsApiService extends ApiService {
     });
 
     const parsedResponse = await ApiService.parseResponse(response);
-    console.log('Принято с сервера', parsedResponse);
     return this.#adaptToClient(parsedResponse);
   }
 
@@ -110,8 +108,7 @@ export default class EventsApiService extends ApiService {
         }
         return String(dest.id).toLowerCase() === searchId;
       });
-    } catch (error) {
-      console.log('Ошибка получения пунктов назанчения', error);
+    } catch {
       return null;
     }
   }

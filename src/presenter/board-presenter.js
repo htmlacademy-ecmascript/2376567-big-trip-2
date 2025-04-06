@@ -214,5 +214,4 @@ export default class BoardPresenter {
     const filteredEvents = this.#filterModel.filterEvents(this.#boardModel.events);
     this.#eventsPresenter.updateEvents(filteredEvents);
   }
-
 }
