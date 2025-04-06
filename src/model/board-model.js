@@ -60,6 +60,10 @@ export default class BoardModel extends Observable {
     return offersType.offers.filter((item) => itemsId.find((id) => item.id === id));
   }
 
+  getEventById(id) {
+    return this.#events.find((event) => event.id === id);
+  }
+
   async addEvent(event) {
     const addedEvent = await this.eventsApiService.addPoint(event);
     this.#events = [addedEvent, ...this.#events];

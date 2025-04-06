@@ -74,8 +74,9 @@ export default class EventsPresenter {
   async handleDeleteEvent(eventId) {
     try {
       this.#uiBlocker.block();
-      this.#eventsListComponent.element.innerHTML = '';
       await this.#boardModel.deleteEvent(eventId);
+      this.#eventsListComponent.element.innerHTML = '';
+      this.events = this.#boardModel.events;
       this._renderEvents();
     } finally {
       this.#uiBlocker.unblock();
@@ -87,7 +88,9 @@ export default class EventsPresenter {
 
     const message = this._getNoEventsMessage();
 
-    if (this.events.length === 0) {
+    const filteredEvents = this.#filterModel.filterEvents(this.#boardModel.events);
+
+    if (filteredEvents.length === 0) {
       const noEventsView = new NoEventsView(message);
       render(noEventsView, this.#eventsListComponent.element);
       return;
