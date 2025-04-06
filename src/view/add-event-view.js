@@ -28,8 +28,11 @@ const createAddEventTemplate = (state) => {
     description = '', pictures = [], destinationName = '', destinationNames } = state;
 
   const renderSectionIf = (condition, content) => condition ? content : '';
+  const startDateValue = dateFrom ? dayjs(dateFrom).format(DATE_FORMAT) : '';
+  const endDateValue = dateTo ? dayjs(dateTo).format(DATE_FORMAT) : '';
 
   return `
+  <li class="trip-events__item">
     <form class="event event--edit" action="#" method="post">
       <header class="event__header">
         <div class="event__type-wrapper">
@@ -68,11 +71,11 @@ const createAddEventTemplate = (state) => {
         <div class="event__field-group event__field-group--time">
           <label class="visually-hidden" for="event-start-time-1">From</label>
           <input class="event__input event__input--time" id="event-start-time-1"
-                 type="text" name="event-start-time" value="${dayjs(dateFrom).format(DATE_FORMAT)}">
+                 type="text" name="event-start-time" value="${startDateValue}">
           &mdash;
           <label class="visually-hidden" for="event-end-time-1">To</label>
           <input class="event__input event__input--time" id="event-end-time-1"
-                 type="text" name="event-end-time" value="${dayjs(dateTo).format(DATE_FORMAT)}">
+                 type="text" name="event-end-time" value="${endDateValue}">
         </div>
 
         <div class="event__field-group event__field-group--price">
@@ -113,6 +116,7 @@ const createAddEventTemplate = (state) => {
         </section>
       </section>
     </form>
+  </li>
   `;
 };
 
@@ -132,6 +136,8 @@ export default class AddEventView extends AbstractStatefulView {
 
     this._setState({
       ...event,
+      dateFrom: null,
+      dateTo: null,
       destination: event.destination,
       offers: currentOffers,
       offersId: [],
@@ -254,6 +260,14 @@ export default class AddEventView extends AbstractStatefulView {
           this.#datepickerStart?.close();
           this._setState({ dateFrom: selectedDates[0] });
           this.#datepickerEnd?.set('minDate', selectedDates[0]);
+        },
+        onOpen: () => {
+          this.element.querySelector('#event-start-time-1').value = '';
+        },
+        onClose: () => {
+          if (!this.#datepickerStart.selectedDates.length) {
+            this.element.querySelector('#event-start-time-1').value = '';
+          }
         }
       }
     );
@@ -268,6 +282,14 @@ export default class AddEventView extends AbstractStatefulView {
         onChange: (selectedDates) => {
           this.#datepickerEnd?.close();
           this._setState({ dateTo: selectedDates[0] });
+        },
+        onOpen: () => {
+          this.element.querySelector('#event-end-time-1').value = '';
+        },
+        onClose: () => {
+          if (!this.#datepickerEnd.selectedDates.length) {
+            this.element.querySelector('#event-end-time-1').value = '';
+          }
         }
       }
     );

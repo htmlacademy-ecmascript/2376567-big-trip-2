@@ -92,7 +92,7 @@ export default class EventPresenter {
       } catch {
         this.#editEventView.shake();
       } finally {
-        this.#editEventView.setSaving(false);
+        this.#editEventView?.setSaving(false);
         this.#uiBlocker.unblock();
       }
     });
