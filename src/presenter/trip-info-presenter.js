@@ -1,4 +1,5 @@
 import { formatDatesRange } from '../utils.js';
+import { SORT_TYPES } from '../const.js';
 
 export default class TripInfoPresenter {
   #boardModel = null;
@@ -19,7 +20,7 @@ export default class TripInfoPresenter {
   }
 
   _updateTripInfo() {
-    const sortedEvents = this.#boardModel.getSortedEventsByDay();
+    const sortedEvents = this.#boardModel.getSortedEvents(this.#boardModel.events, SORT_TYPES.DAY);
     const tripInfo = this._calculateTripInfo(sortedEvents);
 
     const titleElement = this.#container.querySelector('.trip-info__title');

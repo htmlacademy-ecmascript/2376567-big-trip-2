@@ -86,9 +86,15 @@ export default class EventsPresenter {
   _renderEvents() {
     this.removeNoEventsView();
 
+    this.#eventPresenters.forEach((presenter) => presenter.destroy());
+    this.#eventPresenters.clear();
+    this.removeNoEventsView();
+
     const message = this._getNoEventsMessage();
 
     const filteredEvents = this.#filterModel.filterEvents(this.#boardModel.events);
+    const currentSortType = this.#boardModel.getCurrentSortType();
+    const sortedEvents = this.#boardModel.getSortedEvents(filteredEvents, currentSortType);
 
     if (filteredEvents.length === 0) {
       const noEventsView = new NoEventsView(message);
@@ -98,7 +104,7 @@ export default class EventsPresenter {
 
     this.#eventsListComponent.element.innerHTML = '';
 
-    this.events.forEach((event) => this._renderEvent(event));
+    sortedEvents.forEach((event) => this._renderEvent(event));
   }
 
   _getNoEventsMessage() {

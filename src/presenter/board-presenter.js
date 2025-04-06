@@ -31,7 +31,7 @@ export default class BoardPresenter {
 
   init() {
     this._renderBoard();
-    const sortedEvents = this.#sortPresenter.getSortedEvents(
+    const sortedEvents = this.#boardModel.getSortedEvents(
       this.#boardModel.events,
       SORT_TYPES.DAY
     );
@@ -58,7 +58,7 @@ export default class BoardPresenter {
       const modelEvents = this.#boardModel.events;
       const currentSortType = this.#boardModel.getCurrentSortType();
 
-      const sortedEvents = this.#sortPresenter.getSortedEvents(modelEvents, currentSortType);
+      const sortedEvents = this.#boardModel.getSortedEvents(modelEvents, currentSortType);
 
       await new Promise((resolve) => {
         if (!modelEvents.some((e) => e.id === savedEvent.id)) {
@@ -99,7 +99,7 @@ export default class BoardPresenter {
       return savedEvent;
     } catch (error) {
       const currentSortType = this.#boardModel.getCurrentSortType();
-      const sortedEvents = this.#sortPresenter.getSortedEvents(this.#boardModel.events, currentSortType);
+      const sortedEvents = this.#boardModel.getSortedEvents(this.#boardModel.events, currentSortType);
       this.#eventsPresenter.updateEvents(sortedEvents);
       throw error;
     }
@@ -140,7 +140,7 @@ export default class BoardPresenter {
 
     this.#boardModel.changeSortType(SORT_TYPES.DAY);
 
-    const sortedEvents = this.#sortPresenter.getSortedEvents(filteredEvents, SORT_TYPES.DAY);
+    const sortedEvents = this.#boardModel.getSortedEvents(filteredEvents, SORT_TYPES.DAY);
 
     this.#eventsPresenter.updateEvents(sortedEvents);
 
@@ -198,7 +198,7 @@ export default class BoardPresenter {
 
   _updateEventsList() {
     const events = this.#boardModel.events;
-    const sortedEvents = this.#sortPresenter.getSortedEvents(events, this.#boardModel.getCurrentSortType());
+    const sortedEvents = this.#boardModel.getSortedEvents(events, this.#boardModel.getCurrentSortType());
     this.#eventsPresenter.updateEvents(sortedEvents);
   }
 

@@ -66,6 +66,20 @@ export default class EventPresenter {
     }
   }
 
+  destroy() {
+    this.resetView();
+
+    if (this.#eventView) {
+      this.#eventView.removeElement();
+      this.#eventView = null;
+    }
+
+    this.#onDataChange = null;
+    this.#onFormOpen = null;
+    this.#onUserAction = null;
+    this.#onDelete = null;
+  }
+
   _replaceEventWithForm() {
     this.#onFormOpen();
 
