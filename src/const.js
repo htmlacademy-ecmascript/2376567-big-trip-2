@@ -1,6 +1,6 @@
 const POINT_TYPES = ['taxi', 'bus', 'train', 'ship', 'drive', 'flight', 'check-in', 'sightseeing', 'restaurant'];
 
-const DESTINATIONS = ['Amsterdam', 'Chamonix', 'Geneva', 'Paris', 'Berlin', 'Prague', 'Tokyo', 'Moscow', 'Saint-Petersburg'];
+const DESTINATIONS = ['Vien','Moscow','Rotterdam','Kioto','Sochi','Amsterdam','Oslo','Valencia'];
 
 const FILTERS = [
   {
@@ -62,6 +62,17 @@ const USER_ACTIONS = {
   ADD_EVENT: 'ADD_EVENT',
   UPDATE_EVENT: 'UPDATE_EVENT',
   DELETE_EVENT: 'DELETE_EVENT',
+  LOAD_EVENTS: 'LOAD_EVENTS',
+  LOAD_ERROR: 'LOAD_ERROR',
+  EVENTS_LOADED: 'EVENTS_LOADED',
+  SORT_CHANGED: 'SORT_CHANGED'
 };
 
-export { POINT_TYPES, FILTERS, SORT_BUTTONS, SORT_TYPES, DESTINATIONS, USER_ACTIONS };
+const NO_EVENTS_MESSAGES = {
+  everything: 'Click New Event to create your first point',
+  past: 'There are no past events now',
+  present: 'There are no present events now',
+  future: 'There are no future events now'
+};
+
+export { POINT_TYPES, FILTERS, SORT_BUTTONS, SORT_TYPES, DESTINATIONS, USER_ACTIONS, NO_EVENTS_MESSAGES };

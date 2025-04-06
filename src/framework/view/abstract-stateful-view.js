@@ -16,6 +16,10 @@ export default class AbstractStatefulView extends AbstractView {
       return;
     }
 
+    if (!this.element) {
+      return;
+    }
+
     this._setState(update);
 
     this.#rerenderElement();
@@ -38,15 +42,24 @@ export default class AbstractStatefulView extends AbstractView {
   }
 
   /** Метод для перерисовки элемента */
-  #rerenderElement() {
-    const prevElement = this.element;
-    const parent = prevElement.parentElement;
-    this.removeElement();
 
+  #rerenderElement() {
+    if (!this.element || !this.element.parentElement) {
+      return;
+    }
+
+    const parent = this.element.parentElement;
+    const oldElement = this.element;
+
+    this.removeElement();
     const newElement = this.element;
 
-    parent.replaceChild(newElement, prevElement);
-
-    this._restoreHandlers();
+    if (parent && oldElement.parentNode === parent) {
+      parent.replaceChild(newElement, oldElement);
+      // this._restoreHandlers();//возможно сделать
+    } else {
+      parent?.appendChild(newElement);
+      // this._restoreHandlers();//возможно сделать
+    }
   }
 }

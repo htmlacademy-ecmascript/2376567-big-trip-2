@@ -1,20 +1,22 @@
-import { getRandomEvent, getOffers, getDestination } from '../mock/event';
 import Observable from '../framework/observable.js';
-import { USER_ACTIONS } from '../const.js';
+import { USER_ACTIONS, SORT_TYPES } from '../const.js';
+import dayjs from 'dayjs';
+import advancedFormat from 'dayjs/plugin/advancedFormat';
+dayjs.extend(advancedFormat);
 
 export default class BoardModel extends Observable {
   #events = [];
-  #allOffers = getOffers();
-  #allDestinations = getDestination();
-  EVENT_QTY = 5;
+  #allOffers = [];
+  #allDestinations = [];
+  #currentSortType = SORT_TYPES.DAY;
 
-  constructor() {
+  constructor({ eventsApiService }) {
     super();
+    this.eventsApiService = eventsApiService;
+  }
 
-    for (let i = 0; i < this.EVENT_QTY; i++) {
-      const id = i + 1;
-      this.#events.push(getRandomEvent(id));
-    }
+  set events(events) {
+    this.#events = events;
   }
 
   get events() {
@@ -29,13 +31,28 @@ export default class BoardModel extends Observable {
     return this.#allDestinations;
   }
 
+  async loadEvents() {
+    const events = await this.eventsApiService.points;
+    this.#events = events;
+  }
+
+  async loadOffers() {
+    const offers = await this.eventsApiService.getOffers();
+    this.#allOffers = offers;
+  }
+
+  async loadDestinations() {
+    const destinations = await this.eventsApiService.getDestinations();
+    this.#allDestinations = destinations;
+  }
+
   getDestinationsById(id) {
-    const allDestinations = this.destinations;
-    return allDestinations.find((item) => item.id === id);
+    return this.destinations.find((item) => item.id === id);
   }
 
   getOffersByType(type) {
-    return this.#allOffers.find((offer) => offer.type === type);
+    const offer = this.#allOffers.find((item) => item.type === type);
+    return offer || null;
   }
 
   getOffersById(type, itemsId) {
@@ -43,33 +60,52 @@ export default class BoardModel extends Observable {
     return offersType.offers.filter((item) => itemsId.find((id) => item.id === id));
   }
 
-  addEvent(event) {
-    this.#events = [event, ...this.#events];
-    this._notify(USER_ACTIONS.ADD_EVENT, event);
+  async addEvent(event) {
+    const addedEvent = await this.eventsApiService.addPoint(event);
+    this.#events = [addedEvent, ...this.#events];
+    this._notify(USER_ACTIONS.ADD_EVENT, addedEvent);
+    return addedEvent;
   }
 
-  updateEvent(event) {
-    const index = this.#events.findIndex((e) => e.id === event.id);
-    if (index === -1) {
-      throw new Error('Event not found');
-    }
+  async updateEvent(event) {
+
+    const updatedEvent = await this.eventsApiService.updatePoint(event);
+    const index = this.#events.findIndex((e) => e.id === updatedEvent.id);
+
     this.#events = [
       ...this.#events.slice(0, index),
-      event,
-      ...this.#events.slice(index + 1),
+      updatedEvent,
+      ...this.#events.slice(index + 1)
     ];
-    this._notify(USER_ACTIONS.UPDATE_EVENT, event);
+
+    this._notify(USER_ACTIONS.UPDATE_EVENT, updatedEvent);
+    return updatedEvent;
   }
 
-  deleteEvent(eventId) {
+  async deleteEvent(eventId) {
+
+    await this.eventsApiService.deletePoint(eventId);
+
     const index = this.#events.findIndex((e) => e.id === eventId);
-    if (index === -1) {
-      throw new Error('Event not found');
+    if (index !== -1) {
+      this.#events = [
+        ...this.#events.slice(0, index),
+        ...this.#events.slice(index + 1)
+      ];
+      this._notify(USER_ACTIONS.DELETE_EVENT, eventId);
     }
-    this.#events = [
-      ...this.#events.slice(0, index),
-      ...this.#events.slice(index + 1),
-    ];
-    this._notify(USER_ACTIONS.DELETE_EVENT, eventId);
+  }
+
+  changeSortType(sortType) {
+    this.#currentSortType = sortType;
+    this._notify(USER_ACTIONS.SORT_CHANGED, sortType);
+  }
+
+  getCurrentSortType() {
+    return this.#currentSortType;
+  }
+
+  getSortedEventsByDay() {
+    return [...this.#events].sort((a, b) => dayjs(b.dateTo).diff(b.dateFrom) - dayjs(a.dateTo).diff(a.dateFrom));
   }
 }
