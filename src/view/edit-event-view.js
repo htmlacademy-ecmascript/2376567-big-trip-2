@@ -37,6 +37,7 @@ const createEditEventTemplate = (state) => {
     destinationNames
   } = state;
 
+  const shouldRenderDestination = description || pictures.length;
   const renderSectionIf = (condition, content) => condition ? content : '';
 
   return `
@@ -110,19 +111,21 @@ const createEditEventTemplate = (state) => {
           </section>
         `)}
 
-        <section class="event__section event__section--destination">
-          <h3 class="event__section-title event__section-title--destination">Destination</h3>
-          <p class="event__destination-description">${description}</p>
-          ${renderSectionIf(pictures.length, `
-            <div class="event__photos-container">
-              <div class="event__photos-tape">
-                ${pictures.map((photo) => `
-                  <img class="event__photo" src="${photo.src}" alt="${photo.description}">
-                `).join('')}
+        ${shouldRenderDestination ? `
+          <section class="event__section event__section--destination">
+            <h3 class="event__section-title event__section-title--destination">Destination</h3>
+            ${description ? `<p class="event__destination-description">${description}</p>` : ''}
+            ${pictures.length ? `
+              <div class="event__photos-container">
+                <div class="event__photos-tape">
+                  ${pictures.map((photo) => `
+                    <img class="event__photo" src="${photo.src}" alt="${photo.description}">
+                  `).join('')}
+                </div>
               </div>
-            </div>
-          `)}
-        </section>
+            ` : ''}
+          </section>
+        ` : ''}
       </section>
     </form>
   `;
@@ -183,7 +186,6 @@ export default class EditEventView extends AbstractStatefulView {
     const destination = this.#destinations.find((d) => d.name === destinationName);
 
     if (!destination) {
-      console.log('События не найдены');
       this.shake();
       return;
     }
@@ -198,7 +200,6 @@ export default class EditEventView extends AbstractStatefulView {
 
     const basePrice = Number(formData.get('event-price'));
     if (isNaN(basePrice) || basePrice < 1 || basePrice > 100000) {
-      console.log('Неверная цена');
       this.shake();
       return;
     }
@@ -207,7 +208,6 @@ export default class EditEventView extends AbstractStatefulView {
     const dateTo = convertDateToISO(formData.get('event-end-time'));
 
     if (!dateFrom || !dateTo || new Date(dateFrom) >= new Date(dateTo)) {
-      console.log('Неверная дата');
       this.shake();
       return;
     }
@@ -236,33 +236,13 @@ export default class EditEventView extends AbstractStatefulView {
     this._setDatepicker();
   }
 
-  _setTypeChangeHandler() {
-    this._addConditionalListener('.event__type-list', 'change',
-      (evt) => evt.target.tagName === 'INPUT',
-      (evt) => {
-        const newType = evt.target.value;
-        const newOffers = this.#offers.find((o) => o.type === newType)?.offers || [];
-
-        this._setState({
-          type: newType,
-          offersId: [],
-          offers: newOffers
-        });
-
-        this._updateElementText('.event__type-output', newType);
-        this._updateElementAttribute('.event__type-icon', 'src', `img/icons/${newType}.png`);
-        this._closeTypeDropdown();
-      }
-    );
-  }
-
   _setDestinationChangeHandler() {
     const destinationInput = this.element.querySelector('.event__input--destination');
     if (destinationInput) {
       let timeout;
       destinationInput.addEventListener('input', (evt) => {
         clearTimeout(timeout);
-        timeout = setTimeout(() => this._handleDestinationInput(evt.target.value), 300);
+        timeout = setTimeout(() => this._handleDestinationInput(evt.target.value), 100);
       });
     }
   }
@@ -288,12 +268,37 @@ export default class EditEventView extends AbstractStatefulView {
   }
 
   _updateDestinationDetails(destination) {
-    this._updateElementText('.event__destination-description', destination.description || '');
-    this._updateElementHTML(
-      '.event__photos-tape',
-      destination.pictures?.map((p) => `<img class="event__photo" src="${p.src}" alt="${p.description}">`).join('') || ''
-    );
-    this._toggleElementVisibility('.event__section--destination', !!destination.description);
+    const sectionDestination = this.element.querySelector('.event__section--destination');
+    const shouldShowSection = !!destination.description || destination.pictures?.length;
+
+    if (shouldShowSection) {
+      if (!sectionDestination) {
+        const sectionHTML = `
+          <section class="event__section event__section--destination">
+            <h3 class="event__section-title event__section-title--destination">Destination</h3>
+            ${destination.description ? `<p class="event__destination-description">${destination.description}</p>` : ''}
+            ${destination.pictures?.length ? `
+              <div class="event__photos-container">
+                <div class="event__photos-tape">
+                  ${destination.pictures.map((p) => `<img class="event__photo" src="${p.src}" alt="${p.description}">`).join('')}
+                </div>
+              </div>
+            ` : ''}
+          </section>
+        `;
+        this.element.querySelector('.event__details').insertAdjacentHTML('beforeend', sectionHTML);
+      } else {
+        this._updateElementText('.event__destination-description', destination.description || '');
+        this._updateElementHTML(
+          '.event__photos-tape',
+          destination.pictures?.map((p) => `<img class="event__photo" src="${p.src}" alt="${p.description}">`).join('') || ''
+        );
+      }
+    } else {
+      if (sectionDestination) {
+        sectionDestination.remove();
+      }
+    }
   }
 
   _setDatepicker() {
@@ -370,6 +375,62 @@ export default class EditEventView extends AbstractStatefulView {
     const typeToggle = this.element.querySelector('.event__type-toggle');
     if (typeToggle) {
       typeToggle.checked = false;
+    }
+  }
+
+  _setTypeChangeHandler() {
+    this._addConditionalListener('.event__type-list', 'change',
+      (evt) => evt.target.tagName === 'INPUT',
+      (evt) => {
+        const newType = evt.target.value;
+        const newOffers = this.#offers.find((o) => o.type === newType)?.offers || [];
+
+        const checkedOffers = Array.from(
+          this.element.querySelectorAll('.event__offer-checkbox:checked')
+        ).map((input) => input.value);
+
+        this._setState({
+          type: newType,
+          offersId: checkedOffers.filter((id) =>
+            newOffers.some((offer) => offer.id === id)
+          ),
+          offers: newOffers
+        });
+
+        this._updateElementText('.event__type-output', newType);
+        this._updateElementAttribute('.event__type-icon', 'src', `img/icons/${newType}.png`);
+
+        this._updateOffersSection(newOffers);
+
+        this._closeTypeDropdown();
+      }
+    );
+  }
+
+  _updateOffersSection(offers) {
+    const sectionOffers = this.element.querySelector('.event__section--offers');
+    const shouldShowSection = offers?.length > 0;
+
+    if (shouldShowSection) {
+      const offersHTML = createOffersTemplate(offers, this._state.offersId);
+
+      if (!sectionOffers) {
+        const sectionHTML = `
+          <section class="event__section event__section--offers">
+            <h3 class="event__section-title event__section-title--offers">Offers</h3>
+            <div class="event__available-offers">
+              ${offersHTML}
+            </div>
+          </section>
+        `;
+        this.element.querySelector('.event__details').insertAdjacentHTML('afterbegin', sectionHTML);
+      } else {
+        this._updateElementHTML('.event__available-offers', offersHTML);
+      }
+    } else {
+      if (sectionOffers) {
+        sectionOffers.remove();
+      }
     }
   }
 

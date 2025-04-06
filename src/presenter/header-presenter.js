@@ -3,6 +3,7 @@ import TripMainView from '../view/trip-main-veiw.js';
 import FiltersPresenter from './filters-presenter.js';
 import AddEventView from '../view/add-event-view.js';
 import { USER_ACTIONS } from '../const.js';
+import TripInfoPresenter from './trip-info-presenter.js';
 
 export default class HeaderPresenter {
   #filterModel = null;
@@ -13,31 +14,59 @@ export default class HeaderPresenter {
   #newAddEventView = null;
   #isFormOpen = false;
   #boardModel = null;
+  #uiBlocker = null;
+  #tripInfoPresenter = null;
 
-  constructor({ headerContainer, filterModel, boardPresenter, boardModel }) {
+  constructor({ headerContainer, filterModel, boardPresenter, boardModel, uiBlocker }) {
     this.#headerContainer = headerContainer;
     this.#filterModel = filterModel;
-    this.#filtersPresenter = new FiltersPresenter({ filterModel: this.#filterModel });
-    this.#boardPresenter = boardPresenter;
     this.#boardModel = boardModel;
+    this.#boardPresenter = boardPresenter;
+    this.#uiBlocker = uiBlocker;
+
+    this.#tripInfoPresenter = new TripInfoPresenter({
+      container: headerContainer,
+      boardModel: this.#boardModel,
+      uiBlocker: this.#uiBlocker,
+      boardPresenter: boardPresenter,
+    });
+
+    this.#filtersPresenter = new FiltersPresenter({
+      filterModel: this.#filterModel,
+      boardModel: this.#boardModel
+    });
 
     this.#filterModel.addObserver(this._handleFilterChange.bind(this));
-
     this.#boardModel.addObserver(this._handleSortChange.bind(this));
   }
 
-  init() {
-    this.#tripMainView = new TripMainView();
-    this.#headerContainer.innerHTML = '';
-    render(this.#tripMainView, this.#headerContainer);
-    this.#tripMainView.setNewEventButtonHandler(() => this._handleNewEventClick());
-    this.#filtersPresenter.init();
+  async init() {
+    try {
+      this.#uiBlocker.block();
+
+      this.#tripMainView = new TripMainView();
+      this.#boardPresenter.setTripMainView(this.#tripMainView);
+
+      this.#headerContainer.innerHTML = '';
+      render(this.#tripMainView, this.#headerContainer);
+
+      await this.#tripInfoPresenter.init();
+
+      this.#filtersPresenter.init();
+
+      this.#tripMainView.setNewEventButtonHandler(() => this._handleNewEventClick());
+
+    } finally {
+      this.#uiBlocker.unblock();
+    }
   }
 
   _handleNewEventClick() {
     if (this.#isFormOpen) {
       return;
     }
+
+    this.#boardPresenter.resetFiltersAndSorting();
 
     const newEvent = {
       id: null,
@@ -57,26 +86,27 @@ export default class HeaderPresenter {
       offers: this.#boardModel.offers || [],
     });
 
-    this.#newAddEventView.setFormSubmitHandler((newEventData) => {
-      this.#newAddEventView.setSaving(true);
+    this.#newAddEventView.setFormSubmitHandler(async (newEventData) => {
+      const formView = this.#newAddEventView;
 
-      this.#boardModel.addEvent(newEventData)
-        .then(() => {
-          this._closeForm();
-        })
-        .catch((err) => {
-          console.log('Ошибка сохранения:', err);
-          this.#newAddEventView.shake();
-        })
-        .finally(() => {
-          this.#newAddEventView.setSaving(false);
-        });
+      try {
+        this.#uiBlocker.block();
+        this.#newAddEventView.setSaving(true);
+        await this.#boardModel.addEvent(newEventData);
+        this._closeForm();
+      } catch (err) {
+        this.#newAddEventView.shake();
+      } finally {
+        if (this.#newAddEventView === formView) {
+          formView.setSaving(false);
+        }
+        this.#uiBlocker.unblock();
+      }
     });
 
     this.#newAddEventView.setCancelClickHandler(() => this._closeForm());
     this.#newAddEventView.setEscKeyDownHandler(() => this._closeForm());
     this.#boardPresenter.showAddEventForm(this.#newAddEventView);
-    this.#isFormOpen = true;
     this.#tripMainView.blockNewEventButton();
   }
 

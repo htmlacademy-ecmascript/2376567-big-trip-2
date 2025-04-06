@@ -1,25 +1,11 @@
 import dayjs from 'dayjs';
 import durationPlugin from 'dayjs/plugin/duration';
+import advancedFormat from 'dayjs/plugin/advancedFormat';
+import isBetween from 'dayjs/plugin/isBetween';
+
 dayjs.extend(durationPlugin);
-
-const DATE_FORMAT = 'D MMM';
-
-const humanizeTaskDueDate = (dueDate) => dueDate ? dayjs(dueDate).format(DATE_FORMAT) : '';
-
-const getRandomInt = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
-const returnRandomElem = (array) => array[getRandomInt(0, array.length - 1)];
-const getRandomUniqueInt = (min, max) => {
-  const uinqueIntArr = [];
-  return function () {
-    while (uinqueIntArr.length < max - min + 1) {
-      const randomInt = getRandomInt(min, max);
-      if (!uinqueIntArr.includes(randomInt)) {
-        uinqueIntArr.push(randomInt);
-        return randomInt;
-      }
-    }
-  };
-};
+dayjs.extend(advancedFormat);
+dayjs.extend(isBetween);
 
 const getDuration = (start, end) => {
   const duration = dayjs.duration(dayjs(end).diff(dayjs(start)));
@@ -28,16 +14,12 @@ const getDuration = (start, end) => {
   const remainingHours = duration.hours();
   const remainingMinutes = duration.minutes();
 
-  const daysStr = `${totalDays.toString().padStart(2, '0') }D`;
-  const hoursStr = `${remainingHours.toString().padStart(2, '0') }H`;
-  const minutesStr = `${remainingMinutes.toString().padStart(2, '0') }M`;
+  const daysStr = `${totalDays.toString().padStart(2, '0')}D`;
+  const hoursStr = `${remainingHours.toString().padStart(2, '0')}H`;
+  const minutesStr = `${remainingMinutes.toString().padStart(2, '0')}M`;
 
   return `${daysStr} ${hoursStr} ${minutesStr}`;
 };
-
-function updateItem(items, update) {
-  return items.map((item) => item.id === update.id ? update : item);
-}
 
 const convertDateToISO = (date) => {
   if (!date) {
@@ -62,4 +44,23 @@ const convertDateToISO = (date) => {
   return null;
 };
 
-export {getRandomInt, returnRandomElem, getRandomUniqueInt, humanizeTaskDueDate, getDuration, updateItem, convertDateToISO};
+const formatDatesRange = (startDate, endDate) => {
+  if (!startDate || !endDate) {
+    return '';
+  }
+  const start = dayjs(startDate);
+  const end = dayjs(endDate);
+  if (start.isSame(end, 'day')) {
+    return start.format('D MMM');
+  }
+  if (start.isSame(end, 'month')) {
+    return `${start.format('D')} — ${end.format('D MMM')}`;
+  }
+  return `${start.format('D MMM')} — ${end.format('D MMM')}`;
+};
+
+export {
+  getDuration,
+  convertDateToISO,
+  formatDatesRange,
+};

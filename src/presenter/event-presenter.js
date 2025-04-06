@@ -16,8 +16,10 @@ export default class EventPresenter {
   #onFormOpen = null;
   #onUserAction = null;
   #onDelete = null;
+  #resetFiltersAndSorting = null;
+  #uiBlocker = null;
 
-  constructor({ event, destination, offer, onDataChange, destinationAll, offerAll, onFormOpen, onUserAction, onDelete }) {
+  constructor({ event, destination, offer, onDataChange, destinationAll, offerAll, onFormOpen, onUserAction, onDelete, resetFiltersAndSorting, uiBlocker }) {
     this.#event = event;
     this.#destination = destination;
     this.#offer = offer;
@@ -27,6 +29,8 @@ export default class EventPresenter {
     this.#onFormOpen = onFormOpen;
     this.#onUserAction = onUserAction;
     this.#onDelete = onDelete;
+    this.#resetFiltersAndSorting = resetFiltersAndSorting;
+    this.#uiBlocker = uiBlocker;
   }
 
   init(container) {
@@ -47,8 +51,8 @@ export default class EventPresenter {
     this.#eventView.setRollupClickHandler(() => this._replaceEventWithForm());
     this.#eventView.setFavoriteBtnClickHandler(() => this.#onDataChange({ ...this.#event, favorite: !this.#event.favorite }));
 
-    prevEventView.removeElement();
     replace(this.#eventView, prevEventView);
+    prevEventView.removeElement();
   }
 
   resetView() {
@@ -65,6 +69,11 @@ export default class EventPresenter {
   _replaceEventWithForm() {
     this.#onFormOpen();
 
+    const listItem = this.#eventView.element.closest('li.trip-events__item');
+    if (!listItem) {
+      return;
+    }
+
     this.#editEventView = new EditEventView(
       this.#event,
       this.#destination,
@@ -73,20 +82,19 @@ export default class EventPresenter {
       this.#offerAll
     );
 
-    this.#editEventView.setFormSubmitHandler((updatedEvent) => {
+    this.#editEventView.setFormSubmitHandler(async (updatedEvent) => {
       this.#editEventView.setSaving(true);
-
-      this.#onDataChange(updatedEvent)
-        .then(() => {
-          this.update(updatedEvent,
-            this.#destinationAll.find((d) => d.id === updatedEvent.destination),
-            this.#offerAll.find((o) => o.type === updatedEvent.type)
-          );
-          this._replaceFormWithEvent();
-        })
-        .catch(() => {
-          this.#editEventView.shake();
-        });
+      try {
+        this.#uiBlocker.block();
+        await this.#onDataChange(updatedEvent);
+        this.#resetFiltersAndSorting();
+        this._replaceFormWithEvent();
+      } catch {
+        this.#editEventView.shake();
+      } finally {
+        this.#editEventView.setSaving(false);
+        this.#uiBlocker.unblock();
+      }
     });
 
     this.#editEventView.setDeleteClickHandler(() => this._deleteFormEvent());
@@ -94,7 +102,8 @@ export default class EventPresenter {
     this.#editEventView.setCloseButtonClickHandler(() => this._deleteFormEvent());
     this.#editEventView.setRollupButtonClickHandler(() => this._replaceFormWithEvent());
 
-    replace(this.#editEventView, this.#eventView);
+    listItem.innerHTML = '';
+    listItem.appendChild(this.#editEventView.element);
   }
 
   _replaceFormWithEvent() {
@@ -102,11 +111,13 @@ export default class EventPresenter {
       return;
     }
 
-    if (!this.#eventView.element.parentElement && this.#editEventView.element.parentElement) {
-      this.#editEventView.element.parentElement.appendChild(this.#eventView.element);
-    } else if (this.#editEventView.element.parentElement) {
-      this.#editEventView.element.parentElement.replaceChild(this.#eventView.element, this.#editEventView.element);
+    const listItem = this.#editEventView.element.closest('li.trip-events__item');
+    if (!listItem) {
+      return;
     }
+
+    listItem.innerHTML = '';
+    listItem.appendChild(this.#eventView.element);
 
     this.#editEventView.removeElement();
     this.#editEventView = null;
@@ -129,7 +140,6 @@ export default class EventPresenter {
         this._replaceFormWithEvent();
       }
     } catch (error) {
-      console.log('Ошибка удаления', error);
       if (this.#editEventView) {
         this.#editEventView.shake();
       }
@@ -194,7 +204,6 @@ export default class EventPresenter {
       this._replaceFormWithEvent();
     } catch (error) {
       this.#editEventView.shake();
-      console.log('Ошибка сохранания', error);
       throw error;
     }
   }
