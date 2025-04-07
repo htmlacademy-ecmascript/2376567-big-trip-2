@@ -13,13 +13,12 @@ export default class EventsPresenter {
   #onDataChange = null;
   #eventPresenters = new Map();
   #filterModel = null;
-  #boardContainer = null;
   #resetFiltersAndSorting = null;
   #onFormOpen = null;
   #tripMainView = null;
   #uiBlocker = null;
 
-  constructor({ events, destinations, offers, boardModel, eventsListComponent, onDataChange, filterModel, boardContainer, resetFiltersAndSorting, onFormOpen, tripMainView, uiBlocker}) {
+  constructor({ events, destinations, offers, boardModel, eventsListComponent, onDataChange, filterModel, resetFiltersAndSorting, onFormOpen, tripMainView, uiBlocker}) {
     this.events = events;
     this.#destinations = destinations;
     this.#offers = offers;
@@ -27,7 +26,6 @@ export default class EventsPresenter {
     this.#eventsListComponent = eventsListComponent;
     this.#onDataChange = onDataChange;
     this.#filterModel = filterModel;
-    this.#boardContainer = boardContainer;
     this.#resetFiltersAndSorting = resetFiltersAndSorting;
     this.#onFormOpen = onFormOpen;
     this.#tripMainView = tripMainView;
@@ -36,6 +34,13 @@ export default class EventsPresenter {
 
   init() {
     this._renderEvents();
+  }
+
+  shakeEvent(eventId) {
+    const eventPresenter = this.#eventPresenters.get(eventId);
+    if (eventPresenter) {
+      eventPresenter.shake();
+    }
   }
 
   _renderEvent(event) {
@@ -74,8 +79,9 @@ export default class EventsPresenter {
   async handleDeleteEvent(eventId) {
     try {
       this.#uiBlocker.block();
-      this.#eventsListComponent.element.innerHTML = '';
       await this.#boardModel.deleteEvent(eventId);
+      this.#eventsListComponent.element.innerHTML = '';
+      this.events = this.#boardModel.events;
       this._renderEvents();
     } finally {
       this.#uiBlocker.unblock();
@@ -85,9 +91,17 @@ export default class EventsPresenter {
   _renderEvents() {
     this.removeNoEventsView();
 
+    this.#eventPresenters.forEach((presenter) => presenter.destroy());
+    this.#eventPresenters.clear();
+    this.removeNoEventsView();
+
     const message = this._getNoEventsMessage();
 
-    if (this.events.length === 0) {
+    const filteredEvents = this.#filterModel.filterEvents(this.#boardModel.events);
+    const currentSortType = this.#boardModel.getCurrentSortType();
+    const sortedEvents = this.#boardModel.getSortedEvents(filteredEvents, currentSortType);
+
+    if (filteredEvents.length === 0) {
       const noEventsView = new NoEventsView(message);
       render(noEventsView, this.#eventsListComponent.element);
       return;
@@ -95,7 +109,7 @@ export default class EventsPresenter {
 
     this.#eventsListComponent.element.innerHTML = '';
 
-    this.events.forEach((event) => this._renderEvent(event));
+    sortedEvents.forEach((event) => this._renderEvent(event));
   }
 
   _getNoEventsMessage() {

@@ -14,12 +14,11 @@ export default class EventPresenter {
   #destinationAll = null;
   #offerAll = null;
   #onFormOpen = null;
-  #onUserAction = null;
   #onDelete = null;
   #resetFiltersAndSorting = null;
   #uiBlocker = null;
 
-  constructor({ event, destination, offer, onDataChange, destinationAll, offerAll, onFormOpen, onUserAction, onDelete, resetFiltersAndSorting, uiBlocker }) {
+  constructor({ event, destination, offer, onDataChange, destinationAll, offerAll, onFormOpen, onDelete, resetFiltersAndSorting, uiBlocker }) {
     this.#event = event;
     this.#destination = destination;
     this.#offer = offer;
@@ -27,7 +26,6 @@ export default class EventPresenter {
     this.#destinationAll = destinationAll;
     this.#offerAll = offerAll;
     this.#onFormOpen = onFormOpen;
-    this.#onUserAction = onUserAction;
     this.#onDelete = onDelete;
     this.#resetFiltersAndSorting = resetFiltersAndSorting;
     this.#uiBlocker = uiBlocker;
@@ -39,6 +37,10 @@ export default class EventPresenter {
     this.#eventView.setFavoriteBtnClickHandler(() => this.#onDataChange({ ...this.#event, favorite: !this.#event.favorite }));
 
     container.appendChild(this.#eventView.element);
+  }
+
+  shake() {
+    this.#eventView.shake();
   }
 
   update(event, destination, offer) {
@@ -66,6 +68,19 @@ export default class EventPresenter {
     }
   }
 
+  destroy() {
+    this.resetView();
+
+    if (this.#eventView) {
+      this.#eventView.removeElement();
+      this.#eventView = null;
+    }
+
+    this.#onDataChange = null;
+    this.#onFormOpen = null;
+    this.#onDelete = null;
+  }
+
   _replaceEventWithForm() {
     this.#onFormOpen();
 
@@ -90,9 +105,9 @@ export default class EventPresenter {
         this.#resetFiltersAndSorting();
         this._replaceFormWithEvent();
       } catch {
-        this.#editEventView.shake();
+        this.#editEventView?.shake();
       } finally {
-        this.#editEventView.setSaving(false);
+        this.#editEventView?.setSaving(false);
         this.#uiBlocker.unblock();
       }
     });
@@ -163,7 +178,7 @@ export default class EventPresenter {
     const dateFrom = convertDateToISO(formData.get('event-start-time'));
     const dateTo = convertDateToISO(formData.get('event-end-time'));
 
-    if (new Date(dateFrom) >= new Date(dateTo)) {
+    if (new Date(dateFrom) > new Date(dateTo)) {
       this.#editEventView.shake();
       throw new Error('Конеченая дата не может быть раньше начальной');
     }

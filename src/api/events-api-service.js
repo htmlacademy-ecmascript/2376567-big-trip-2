@@ -15,59 +15,78 @@ export default class EventsApiService extends ApiService {
   }
 
   get points() {
-
     return this._load({ url: 'points' })
       .then(ApiService.parseResponse)
-      .then((points) => points.map(this.#adaptToClient));
+      .then((points) => points.map(this.#adaptToClient))
+      .catch(() => {
+        throw new Error('Не удалось загрузить точки маршрута. Пожалуйста, попробуйте позже.');
+      });
   }
 
   async updatePoint(point) {
-    const adaptedPoint = this.#adaptToServer(point);
-    const response = await this._load({
-      url: `points/${point.id}`,
-      method: 'PUT',
-      body: JSON.stringify(adaptedPoint),
-      headers: new Headers({'Content-Type': 'application/json'})
-    });
+    try {
+      const adaptedPoint = this.#adaptToServer(point);
+      const response = await this._load({
+        url: `points/${point.id}`,
+        method: 'PUT',
+        body: JSON.stringify(adaptedPoint),
+        headers: new Headers({'Content-Type': 'application/json'})
+      });
 
-    const parsedResponse = await ApiService.parseResponse(response);
-    return this.#adaptToClient(parsedResponse);
+      const parsedResponse = await ApiService.parseResponse(response);
+      return this.#adaptToClient(parsedResponse);
+    } catch (error) {
+      throw new Error(`Не удалось обновить точку ${point.id}. Пожалуйста, попробуйте снова.`);
+    }
   }
 
   async addPoint(point) {
-    const response = await this._load({
-      url: 'points',
-      method: Method.POST,
-      body: JSON.stringify(this.#adaptToServer(point)),
-      headers: new Headers({ 'Content-Type': 'application/json' }),
-    });
+    try {
+      const response = await this._load({
+        url: 'points',
+        method: Method.POST,
+        body: JSON.stringify(this.#adaptToServer(point)),
+        headers: new Headers({ 'Content-Type': 'application/json' }),
+      });
 
-    const parsedResponse = await ApiService.parseResponse(response);
-
-    return this.#adaptToClient(parsedResponse);
+      const parsedResponse = await ApiService.parseResponse(response);
+      return this.#adaptToClient(parsedResponse);
+    } catch (error) {
+      throw new Error('Не удалось добавить новую точку. Пожалуйста, попробуйте снова.');
+    }
   }
 
   async deletePoint(pointId) {
-    const response = await this._load({
-      url: `points/${pointId}`,
-      method: Method.DELETE
-    });
+    try {
+      const response = await this._load({
+        url: `points/${pointId}`,
+        method: Method.DELETE
+      });
 
-    if (response.status === 204 || response.status === 200) {
-      return null;
+      if (response.status === 204 || response.status === 200) {
+        return null;
+      }
+
+      return ApiService.parseResponse(response);
+    } catch (error) {
+      throw new Error(`Не удалось удалить точку ${pointId}. Пожалуйста, попробуйте снова.`);
     }
-
-    return ApiService.parseResponse(response);
   }
 
   async getDestinations() {
     return this._load({ url: 'destinations' })
-      .then(ApiService.parseResponse);
+      .then(ApiService.parseResponse)
+      .catch(() => {
+        throw new Error('Не удалось загрузить направления. Пожалуйста, попробуйте позже.');
+      });
   }
 
   async getOffers() {
     return this._load({ url: 'offers' })
-      .then(ApiService.parseResponse);
+      .then(ApiService.parseResponse)
+      .catch(() => {
+        throw new Error('Не удалось загрузить предложения. Пожалуйста, попробуйте позже.');
+      });
   }
 
   #adaptToClient(point) {

@@ -55,9 +55,8 @@ export default class BoardModel extends Observable {
     return offer || null;
   }
 
-  getOffersById(type, itemsId) {
-    const offersType = this.getOffersByType(type);
-    return offersType.offers.filter((item) => itemsId.find((id) => item.id === id));
+  getEventById(id) {
+    return this.#events?.find((event) => event.id === id);
   }
 
   async addEvent(event) {
@@ -105,7 +104,15 @@ export default class BoardModel extends Observable {
     return this.#currentSortType;
   }
 
-  getSortedEventsByDay() {
-    return [...this.#events].sort((a, b) => dayjs(b.dateTo).diff(b.dateFrom) - dayjs(a.dateTo).diff(a.dateFrom));
+  getSortedEvents(events, sortType) {
+    switch (sortType) {
+      case SORT_TYPES.TIME:
+        return [...events].sort((a, b) => dayjs(b.dateTo).diff(b.dateFrom) - dayjs(a.dateTo).diff(a.dateFrom));
+      case SORT_TYPES.PRICE:
+        return [...events].sort((a, b) => b.basePrice - a.basePrice);
+      case SORT_TYPES.DAY:
+      default:
+        return [...events].sort((a, b) => dayjs(a.dateFrom).diff(dayjs(b.dateFrom)));
+    }
   }
 }
