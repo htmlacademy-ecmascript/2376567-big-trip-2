@@ -14,12 +14,11 @@ export default class EventPresenter {
   #destinationAll = null;
   #offerAll = null;
   #onFormOpen = null;
-  #onUserAction = null;
   #onDelete = null;
   #resetFiltersAndSorting = null;
   #uiBlocker = null;
 
-  constructor({ event, destination, offer, onDataChange, destinationAll, offerAll, onFormOpen, onUserAction, onDelete, resetFiltersAndSorting, uiBlocker }) {
+  constructor({ event, destination, offer, onDataChange, destinationAll, offerAll, onFormOpen, onDelete, resetFiltersAndSorting, uiBlocker }) {
     this.#event = event;
     this.#destination = destination;
     this.#offer = offer;
@@ -27,7 +26,6 @@ export default class EventPresenter {
     this.#destinationAll = destinationAll;
     this.#offerAll = offerAll;
     this.#onFormOpen = onFormOpen;
-    this.#onUserAction = onUserAction;
     this.#onDelete = onDelete;
     this.#resetFiltersAndSorting = resetFiltersAndSorting;
     this.#uiBlocker = uiBlocker;
@@ -76,7 +74,6 @@ export default class EventPresenter {
 
     this.#onDataChange = null;
     this.#onFormOpen = null;
-    this.#onUserAction = null;
     this.#onDelete = null;
   }
 

@@ -1,7 +1,5 @@
 const POINT_TYPES = ['taxi', 'bus', 'train', 'ship', 'drive', 'flight', 'check-in', 'sightseeing', 'restaurant'];
 
-const DESTINATIONS = ['Vien','Moscow','Rotterdam','Kioto','Sochi','Amsterdam','Oslo','Valencia'];
-
 const FILTERS = [
   {
     id: 'filter-everything',
@@ -75,4 +73,4 @@ const NO_EVENTS_MESSAGES = {
   future: 'There are no future events now'
 };
 
-export { POINT_TYPES, FILTERS, SORT_BUTTONS, SORT_TYPES, DESTINATIONS, USER_ACTIONS, NO_EVENTS_MESSAGES };
+export { POINT_TYPES, FILTERS, SORT_BUTTONS, SORT_TYPES, USER_ACTIONS, NO_EVENTS_MESSAGES };

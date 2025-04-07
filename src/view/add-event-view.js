@@ -325,7 +325,8 @@ export default class AddEventView extends AbstractStatefulView {
   }
 
   _handleFormSubmit() {
-    const formData = new FormData(this.element);
+    const formElement = this.element.querySelector('form.event--edit');
+    const formData = new FormData(formElement);
     const destinationName = formData.get('event-destination');
     const destination = this.#destinations.find((d) => d.name === destinationName);
     const checkedOffers = Array.from(

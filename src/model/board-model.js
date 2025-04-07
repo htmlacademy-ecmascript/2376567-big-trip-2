@@ -55,13 +55,8 @@ export default class BoardModel extends Observable {
     return offer || null;
   }
 
-  getOffersById(type, itemsId) {
-    const offersType = this.getOffersByType(type);
-    return offersType.offers.filter((item) => itemsId.find((id) => item.id === id));
-  }
-
   getEventById(id) {
-    return this.#events.find((event) => event.id === id);
+    return this.#events?.find((event) => event.id === id);
   }
 
   async addEvent(event) {

@@ -15,7 +15,6 @@ export default class BoardPresenter {
   #eventsPresenter = null;
   #addEventForm = null;
   #sortPresenter = null;
-  #isAddFormOpen = false;
   #tripMainView = null;
   #uiBlocker = null;
 

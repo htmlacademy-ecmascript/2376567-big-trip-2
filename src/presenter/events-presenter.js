@@ -13,13 +13,12 @@ export default class EventsPresenter {
   #onDataChange = null;
   #eventPresenters = new Map();
   #filterModel = null;
-  #boardContainer = null;
   #resetFiltersAndSorting = null;
   #onFormOpen = null;
   #tripMainView = null;
   #uiBlocker = null;
 
-  constructor({ events, destinations, offers, boardModel, eventsListComponent, onDataChange, filterModel, boardContainer, resetFiltersAndSorting, onFormOpen, tripMainView, uiBlocker}) {
+  constructor({ events, destinations, offers, boardModel, eventsListComponent, onDataChange, filterModel, resetFiltersAndSorting, onFormOpen, tripMainView, uiBlocker}) {
     this.events = events;
     this.#destinations = destinations;
     this.#offers = offers;
@@ -27,7 +26,6 @@ export default class EventsPresenter {
     this.#eventsListComponent = eventsListComponent;
     this.#onDataChange = onDataChange;
     this.#filterModel = filterModel;
-    this.#boardContainer = boardContainer;
     this.#resetFiltersAndSorting = resetFiltersAndSorting;
     this.#onFormOpen = onFormOpen;
     this.#tripMainView = tripMainView;

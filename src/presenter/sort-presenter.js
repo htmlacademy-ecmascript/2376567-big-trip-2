@@ -1,7 +1,5 @@
 import SortView from '../view/sort-view.js';
 import { render } from '../framework/render.js';
-import { SORT_TYPES } from '../const.js';
-import dayjs from 'dayjs';
 
 export default class SortPresenter {
   container = null;

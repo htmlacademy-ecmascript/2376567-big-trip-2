@@ -4,12 +4,10 @@ import { SORT_TYPES } from '../const.js';
 export default class TripInfoPresenter {
   #boardModel = null;
   #container = null;
-  #uiBlocker = null;
 
-  constructor({ container, boardModel, uiBlocker }) {
+  constructor({ container, boardModel}) {
     this.#container = container;
     this.#boardModel = boardModel;
-    this.#uiBlocker = uiBlocker;
     this.#boardModel.addObserver(this._handleModelChange.bind(this));
   }
 

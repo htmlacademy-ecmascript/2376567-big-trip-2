@@ -55,11 +55,11 @@ Promise.all([
   loadingView.removeElement();
   headerPresenter.init();
   boardPresenter.init();
-});
-  // .catch(() => {
-  //   loadingView.removeElement();
-  //   setTimeout(() => {
-  //     const errorView = new FailedLoadView();
-  //     render(errorView, siteMainElement);
-  //   }, 500);
-  // });
+})
+  .catch(() => {
+    loadingView.removeElement();
+    setTimeout(() => {
+      const errorView = new FailedLoadView();
+      render(errorView, siteMainElement);
+    }, 500);
+  });
