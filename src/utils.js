@@ -32,9 +32,12 @@ const convertDateToISO = (date) => {
 
   if (typeof date === 'string') {
     const [day, month, year, hour, minute] = date.split(/[/ :]/);
-    const fullYear = `20${year}`;
-    const dateObj = new Date(`${fullYear}-${month}-${day}T${hour}:${minute}:00.000Z`);
-    return dateObj.toISOString();
+    const fullYear = year.length === 2 ? `20${year}` : year;
+
+    const dateObj = new Date(`${fullYear}-${month}-${day}T${hour}:${minute}:00`);
+
+    const isoString = dateObj.toISOString();
+    return isoString;
   }
 
   if (date instanceof Date) {
