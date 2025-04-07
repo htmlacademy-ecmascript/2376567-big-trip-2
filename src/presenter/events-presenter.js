@@ -36,6 +36,13 @@ export default class EventsPresenter {
     this._renderEvents();
   }
 
+  shakeEvent(eventId) {
+    const eventPresenter = this.#eventPresenters.get(eventId);
+    if (eventPresenter) {
+      eventPresenter.shake();
+    }
+  }
+
   _renderEvent(event) {
     const liElement = document.createElement('li');
     liElement.classList.add('trip-events__item');

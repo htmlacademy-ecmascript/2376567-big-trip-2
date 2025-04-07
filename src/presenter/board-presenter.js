@@ -5,8 +5,7 @@ import EventsPresenter from './events-presenter.js';
 import { USER_ACTIONS } from '../const.js';
 import { SORT_TYPES } from '../const.js';
 import dayjs from 'dayjs';
-import advancedFormat from 'dayjs/plugin/advancedFormat';
-dayjs.extend(advancedFormat);
+
 export default class BoardPresenter {
   #eventsListComponent = new EventsListView();
   #boardContainer = null;
@@ -56,7 +55,6 @@ export default class BoardPresenter {
       const savedEvent = await this.#boardModel.updateEvent(updatedEvent);
       const modelEvents = this.#boardModel.events;
       const currentSortType = this.#boardModel.getCurrentSortType();
-
       const sortedEvents = this.#boardModel.getSortedEvents(modelEvents, currentSortType);
 
       await new Promise((resolve) => {
@@ -65,22 +63,27 @@ export default class BoardPresenter {
           resolve();
         } else {
           this.#eventsPresenter.updateEvent(savedEvent);
-          const oldEvent = this.#boardModel.getEventById(updatedEvent.id);
+          const oldEvent = this.#boardModel?.getEventById(updatedEvent.id);
           let needsFullUpdate = false;
 
           switch (currentSortType) {
             case SORT_TYPES.DAY: {
-              needsFullUpdate = !dayjs(savedEvent.dateFrom).isSame(oldEvent.dateFrom);
+              const isSameDate = dayjs(savedEvent.dateFrom).isSame(oldEvent.dateFrom);
+              const isSameFavorite = savedEvent.isFavorite === oldEvent.isFavorite;
+              needsFullUpdate = !isSameDate || !isSameFavorite;
               break;
             }
             case SORT_TYPES.TIME: {
               const oldDuration = dayjs(oldEvent.dateTo).diff(dayjs(oldEvent.dateFrom));
               const newDuration = dayjs(savedEvent.dateTo).diff(dayjs(savedEvent.dateFrom));
-              needsFullUpdate = oldDuration !== newDuration;
+              const isSameFavorite = savedEvent.isFavorite === oldEvent.isFavorite;
+              needsFullUpdate = oldDuration !== newDuration || !isSameFavorite;
               break;
             }
             case SORT_TYPES.PRICE: {
-              needsFullUpdate = savedEvent.basePrice !== oldEvent.basePrice;
+              const isSamePrice = savedEvent.basePrice === oldEvent.basePrice;
+              const isSameFavorite = savedEvent.isFavorite === oldEvent.isFavorite;
+              needsFullUpdate = !isSamePrice || !isSameFavorite;
               break;
             }
             default: {
@@ -94,13 +97,13 @@ export default class BoardPresenter {
           resolve();
         }
       });
-
       return savedEvent;
     } catch (error) {
       const currentSortType = this.#boardModel.getCurrentSortType();
       const sortedEvents = this.#boardModel.getSortedEvents(this.#boardModel.events, currentSortType);
       this.#eventsPresenter.updateEvents(sortedEvents);
-      throw error;
+
+      this.#eventsPresenter.shakeEvent(updatedEvent.id);
     }
   };
 

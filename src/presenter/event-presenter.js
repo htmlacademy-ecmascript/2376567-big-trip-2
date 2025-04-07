@@ -39,6 +39,10 @@ export default class EventPresenter {
     container.appendChild(this.#eventView.element);
   }
 
+  shake() {
+    this.#eventView.shake();
+  }
+
   update(event, destination, offer) {
     this.#event = event;
     this.#destination = destination;
@@ -101,7 +105,7 @@ export default class EventPresenter {
         this.#resetFiltersAndSorting();
         this._replaceFormWithEvent();
       } catch {
-        this.#editEventView.shake();
+        this.#editEventView?.shake();
       } finally {
         this.#editEventView?.setSaving(false);
         this.#uiBlocker.unblock();
@@ -174,7 +178,7 @@ export default class EventPresenter {
     const dateFrom = convertDateToISO(formData.get('event-start-time'));
     const dateTo = convertDateToISO(formData.get('event-end-time'));
 
-    if (new Date(dateFrom) >= new Date(dateTo)) {
+    if (new Date(dateFrom) > new Date(dateTo)) {
       this.#editEventView.shake();
       throw new Error('Конеченая дата не может быть раньше начальной');
     }

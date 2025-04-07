@@ -27,6 +27,7 @@ const createAddEventTemplate = (state) => {
   const { type, basePrice, dateFrom, dateTo, offersId = [], offers = [],
     description = '', pictures = [], destinationName = '', destinationNames } = state;
 
+  const shouldRenderDestination = description || pictures.length;
   const renderSectionIf = (condition, content) => condition ? content : '';
   const startDateValue = dateFrom ? dayjs(dateFrom).format(DATE_FORMAT) : '';
   const endDateValue = dateTo ? dayjs(dateTo).format(DATE_FORMAT) : '';
@@ -101,19 +102,21 @@ const createAddEventTemplate = (state) => {
           </section>
         `)}
 
-        <section class="event__section event__section--destination">
-          <h3 class="event__section-title event__section-title--destination">Destination</h3>
-          <p class="event__destination-description">${description}</p>
-          ${renderSectionIf(pictures.length, `
-            <div class="event__photos-container">
-              <div class="event__photos-tape">
-                ${pictures.map((photo) => `
-                  <img class="event__photo" src="${photo.src}" alt="${photo.description}">
-                `).join('')}
+        ${shouldRenderDestination ? `
+          <section class="event__section event__section--destination">
+            <h3 class="event__section-title event__section-title--destination">Destination</h3>
+            ${description ? `<p class="event__destination-description">${description}</p>` : ''}
+            ${pictures.length ? `
+              <div class="event__photos-container">
+                <div class="event__photos-tape">
+                  ${pictures.map((photo) => `
+                    <img class="event__photo" src="${photo.src}" alt="${photo.description}">
+                  `).join('')}
+                </div>
               </div>
-            </div>
-          `)}
-        </section>
+            ` : ''}
+          </section>
+        ` : ''}
       </section>
     </form>
   </li>
@@ -126,7 +129,7 @@ export default class AddEventView extends AbstractStatefulView {
   #datepickerStart = null;
   #datepickerEnd = null;
 
-  constructor({ event, destination, destinations, offers }) {
+  constructor({ event, destinations, offers }) {
     super();
     this.#destinations = destinations || [];
     this.#offers = offers || [];
@@ -141,9 +144,9 @@ export default class AddEventView extends AbstractStatefulView {
       destination: event.destination,
       offers: currentOffers,
       offersId: [],
-      description: this.#destinations.find((d) => d.id === event.destination)?.description || '',
-      pictures: this.#destinations.find((d) => d.id === event.destination)?.pictures || [],
-      destinationName: destination?.name || '',
+      description: '',
+      pictures: [],
+      destinationName: '',
       destinationNames: extractDestinationNames
     });
 
@@ -208,15 +211,24 @@ export default class AddEventView extends AbstractStatefulView {
   _setDestinationChangeHandler() {
     const destinationInput = this.element.querySelector('.event__input--destination');
     if (destinationInput) {
+      let timeout;
       destinationInput.addEventListener('input', (evt) => {
-        this._handleDestinationInput(evt.target.value);
+        clearTimeout(timeout);
+        timeout = setTimeout(() => this._handleDestinationInput(evt.target.value), 100);
       });
     }
   }
 
   _handleDestinationInput(destinationName) {
     if (!destinationName.trim()) {
-      return this._updateDestinationDetails({ description: '', pictures: [] });
+      this._updateDestinationDetails({ description: '', pictures: [] });
+      this._setState({
+        destinationName: '',
+        description: '',
+        pictures: []
+      });
+      this._hideError();
+      return;
     }
 
     const selectedDestination = this.#destinations.find((d) =>
@@ -232,19 +244,43 @@ export default class AddEventView extends AbstractStatefulView {
         pictures: selectedDestination.pictures
       });
       this._hideError();
+    } else {
+      this._updateDestinationDetails({ description: '', pictures: [] });
     }
   }
 
   _updateDestinationDetails(destination) {
-    this._updateElementText('.event__destination-description', destination.description || '');
-    this._updateElementHTML(
-      '.event__photos-tape',
-      destination.pictures?.map((p) => `<img class="event__photo" src="${p.src}" alt="${p.description}">`).join('') || ''
-    );
-    this._toggleElementVisibility(
-      '.event__section--destination',
-      !!destination.description || !!destination.pictures?.length
-    );
+    const sectionDestination = this.element.querySelector('.event__section--destination');
+    const shouldShowSection = !!destination.description || destination.pictures?.length;
+
+    if (shouldShowSection) {
+      if (!sectionDestination) {
+        const sectionHTML = `
+          <section class="event__section event__section--destination">
+            <h3 class="event__section-title event__section-title--destination">Destination</h3>
+            ${destination.description ? `<p class="event__destination-description">${destination.description}</p>` : ''}
+            ${destination.pictures?.length ? `
+              <div class="event__photos-container">
+                <div class="event__photos-tape">
+                  ${destination.pictures.map((p) => `<img class="event__photo" src="${p.src}" alt="${p.description}">`).join('')}
+                </div>
+              </div>
+            ` : ''}
+          </section>
+        `;
+        this.element.querySelector('.event__details').insertAdjacentHTML('beforeend', sectionHTML);
+      } else {
+        this._updateElementText('.event__destination-description', destination.description || '');
+        this._updateElementHTML(
+          '.event__photos-tape',
+          destination.pictures?.map((p) => `<img class="event__photo" src="${p.src}" alt="${p.description}">`).join('') || ''
+        );
+      }
+    } else {
+      if (sectionDestination) {
+        sectionDestination.remove();
+      }
+    }
   }
 
   _setDatepicker() {
@@ -346,7 +382,7 @@ export default class AddEventView extends AbstractStatefulView {
     const dateFrom = convertDateToISO(formData.get('event-start-time'));
     const dateTo = convertDateToISO(formData.get('event-end-time'));
 
-    if (new Date(dateFrom) >= new Date(dateTo)) {
+    if (new Date(dateFrom) > new Date(dateTo)) {
       this.shake();
       return;
     }
