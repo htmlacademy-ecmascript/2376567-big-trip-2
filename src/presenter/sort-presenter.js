@@ -1,7 +1,5 @@
 import SortView from '../view/sort-view.js';
 import { render } from '../framework/render.js';
-import { SORT_TYPES } from '../const.js';
-import dayjs from 'dayjs';
 
 export default class SortPresenter {
   container = null;
@@ -36,19 +34,7 @@ export default class SortPresenter {
     }
 
     this.#boardModel.changeSortType(sortType);
-    const sortedEvents = this.getSortedEvents(this.#eventsPresenter.events, sortType);
+    const sortedEvents = this.#boardModel.getSortedEvents(this.#eventsPresenter.events, sortType);
     this.#eventsPresenter.updateEvents(sortedEvents);
   };
-
-  getSortedEvents(events, sortType) {
-    switch (sortType) {
-      case SORT_TYPES.TIME:
-        return [...events].sort((a, b) => dayjs(b.dateTo).diff(b.dateFrom) - dayjs(a.dateTo).diff(a.dateFrom));
-      case SORT_TYPES.PRICE:
-        return [...events].sort((a, b) => b.basePrice - a.basePrice);
-      case SORT_TYPES.DAY:
-      default:
-        return [...events].sort((a, b) => dayjs(a.dateFrom).diff(dayjs(b.dateFrom)));
-    }
-  }
 }

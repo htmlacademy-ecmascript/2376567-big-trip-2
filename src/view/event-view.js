@@ -13,7 +13,7 @@ function createEventTemplate(event, destination, offer) {
 
   const getDateWithHour = (date) => dayjs(date).format('HH:mm');
 
-  const createOffersTemplate = (offersArray) => offersArray.map((itemOffer) =>
+  const createOffersTemplate = (renderOffersItems) => renderOffersItems.map((itemOffer) =>
     `
       <li class="event__offer">
         <span class="event__offer-title">${itemOffer.title}</span>

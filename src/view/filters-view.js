@@ -2,7 +2,7 @@ import AbstractView from '../framework/view/abstract-view';
 import { FILTERS } from '../const';
 
 function createFilterTemplate(disabledFilters = {}) {
-  const addFilters = (arrayfilters) => arrayfilters.map(({ id, value, name, status }) =>
+  const addFilters = (renderFilterItems) => renderFilterItems.map(({ id, value, name, status }) =>
     `<div class="trip-filters__filter">
       <input id="${id}" class="trip-filters__filter-input  visually-hidden" type="radio" name="trip-filter" value="${value}" ${status} ${disabledFilters[value] ? 'disabled' : ''}>
       <label class="trip-filters__filter-label" for="${id}">${name}</label>
@@ -16,7 +16,7 @@ function createFilterTemplate(disabledFilters = {}) {
   );
 }
 
-export default class FilterView extends AbstractView {
+export default class FiltersView extends AbstractView {
   #disabledFilters = {};
 
   constructor() {

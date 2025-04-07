@@ -1,5 +1,5 @@
 import { render } from '../framework/render.js';
-import FilterView from '../view/filters-view.js';
+import FiltersView from '../view/filters-view.js';
 import dayjs from 'dayjs';
 import isBetween from 'dayjs/plugin/isBetween';
 
@@ -9,7 +9,7 @@ export default class FiltersPresenter {
   #filterModel = null;
   #boardModel = null;
   #container = null;
-  #filterView = null;
+  #FiltersView = null;
 
   constructor({ filterModel, boardModel }) {
     this.#filterModel = filterModel;
@@ -20,16 +20,16 @@ export default class FiltersPresenter {
 
   init() {
     this.#container = document.body.querySelector('.trip-controls__filters');
-    this.#filterView = new FilterView();
-    render(this.#filterView, this.#container);
-    this.#filterView.setFiltersClickHandler(this._handleFilterChange.bind(this));
+    this.#FiltersView = new FiltersView();
+    render(this.#FiltersView, this.#container);
+    this.#FiltersView.setFiltersClickHandler(this._handleFilterChange.bind(this));
 
     this._updateFiltersAvailability();
   }
 
   _handleModelReset(event, payload) {
     if (event === 'FILTER_RESET') {
-      this.#filterView.updateSelectedFilter(payload.value);
+      this.#FiltersView.updateSelectedFilter(payload.value);
     }
   }
 
@@ -58,12 +58,12 @@ export default class FiltersPresenter {
       past: !events.some((event) => dayjs(event.dateTo).isBefore(currentDate))
     };
 
-    this.#filterView.updateDisabledFilters(disabledFilters);
+    this.#FiltersView.updateDisabledFilters(disabledFilters);
 
     if (disabledFilters[this.#filterModel.filters.value] && events.length > 0) {
       const everythingFilter = this.#filterModel.filters.find((f) => f.value === 'everything');
       this.#filterModel.setFilter(everythingFilter);
-      this.#filterView.updateSelectedFilter('everything');
+      this.#FiltersView.updateSelectedFilter('everything');
     }
   }
 }
